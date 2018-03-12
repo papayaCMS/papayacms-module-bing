@@ -81,7 +81,7 @@ class PapayaModuleBingPage
    * @return PapayaModuleBingApiSearch
    */
   public function searchApi(PapayaModuleBingApiSearch $searchApi = NULL) {
-    if (NULL !== $api) {
+    if (NULL !== $searchApi) {
       $this->_searchApi = $searchApi;
     } elseif (NULL === $this->_searchApi) {
       $this->_searchApi = new PapayaModuleBingApiSearch(
