@@ -1,0 +1,10 @@
+<?xml version="1.0"  encoding="ISO-8859-1" ?>
+  <modulegroup>
+  <name>Bing</name>
+  <description>Bing search integration</description>
+  <prefix>PapayaModuleBing</prefix>
+  <modules>
+    <module type="page" guid="0cd61560531ce610431a0b038bf08c6e" name="Bing Search Page" class="PapayaModuleBingPage" file="Page.php">Show search results from Bing</module>
+  </modules>
+  <tables/>
+</modulegroup>

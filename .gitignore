@@ -1,0 +1,30 @@
+# Composer
+/vendor/
+
+# Phive
+/tools
+
+# Idea / PHPStorm
+/.idea/
+
+# Eclipse
+/.settings
+/.project
+/.buildpath
+
+# Netbeans
+/nbproject
+
+# Build Artifacts
+/build
+
+# papaya CMS
+/papaya.php
+/build.properties
+/papaya.sqlite
+/htdocs/papaya/
+/htdocs/papaya-themes/
+/papaya-data/
+/templates/responsive/
+
+
