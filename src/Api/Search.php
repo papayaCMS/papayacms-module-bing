@@ -2,12 +2,14 @@
 
 class PapayaModuleBingApiSearch extends PapayaObjectInteractive implements PapayaXmlAppendable {
 
+  private $_parameterName;
   private $_endPoint;
   private $_key;
   private $_identifier;
   private $_limit;
 
-  public function __construct($endPoint, $key, $identifier, $limit = 10) {
+  public function __construct($parameterName, $endPoint, $key, $identifier, $limit = 10) {
+    $this->_parameterName = empty($parameterName) ? 'q' : $parameterName;
     $this->_endPoint = $endPoint;
     $this->_key = $key;
     $this->_identifier = $identifier;
@@ -15,16 +17,16 @@ class PapayaModuleBingApiSearch extends PapayaObjectInteractive implements Papay
   }
 
   public function appendTo(PapayaXmlElement $parent) {
-    $searchFor = $this->parameters()->get('q', '');
+    $searchFor = $this->parameters()->get($this->_parameterName, '');
     $pageIndex = max(1, $this->parameters()->get('q_page', 1));
     $offset =  $pageIndex * $this->_limit - $this->_limit;
     if ($searchFor !== '') {
       $result = $this->fetch(
         $searchFor, $this->_limit, $offset
       );
-      $searchNode = $parent->appendElement('search-result');
+      $searchNode = $parent->appendElement('search');
       if ($result instanceof PapayaModuleBingApiSearchResult) {
-        $searchNode->setAttribute('for', $result->getQuery());
+        $searchNode->setAttribute('term', $result->getQuery());
         $urlsNode = $searchNode->appendElement('urls');
         $urlsNode->setAttribute('estimated-total', $result->getEstimatedMatches());
         $urlsNode->setAttribute('offset', $offset);
@@ -35,7 +37,11 @@ class PapayaModuleBingApiSearch extends PapayaObjectInteractive implements Papay
           $urlNode->appendElement('title', [], $url['title']);
           $urlNode->appendElement('snippet', [], $url['snippet']);
         }
-        $searchNode->append(new PapayaUiPagingCount('q_page', $pageIndex, $result->getEstimatedMatches()));
+        $paging = new PapayaUiPagingCount('q_page', $pageIndex, $result->getEstimatedMatches());
+        $paging->reference()->setParameters(
+          array($this->_parameterName => $searchFor)
+        );
+        $searchNode->append($paging);
       }
     }
   }

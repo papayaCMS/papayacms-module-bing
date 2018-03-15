@@ -4,7 +4,7 @@ class PapayaModuleBingPageSearchTest extends PapayaTestCase {
 
   public function testNoQueryExpectingNoAppendedNodes() {
     $search = new PapayaModuleBingApiSearch(
-      '', '', ''
+      NULL, '', '', ''
     );
     $search->papaya($this->mockPapaya()->application());
     $document = new PapayaXmlDocument();

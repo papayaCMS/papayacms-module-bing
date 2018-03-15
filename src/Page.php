@@ -44,7 +44,8 @@ class PapayaModuleBingPage
 
   private $_defaults = [
     'bing_api_endpoint' => 'https://api.cognitive.microsoft.com/bingcustomsearch/v7.0/search',
-    'bing_result_limit' => 10
+    'bing_result_limit' => 10,
+    'search_term_parameter' => 'q'
   ];
 
   public function __construct($owner) {
@@ -85,12 +86,12 @@ class PapayaModuleBingPage
       $this->_searchApi = $searchApi;
     } elseif (NULL === $this->_searchApi) {
       $this->_searchApi = new PapayaModuleBingApiSearch(
+        $this->content()->get('search_term_parameter', $this->_defaults['search_term_parameter']),
         $this->content()->get('bing_api_endpoint', $this->_defaults['bing_api_endpoint']),
         $this->content()->get('bing_api_key', ''),
         $this->content()->get('bing_configuration_id', ''),
         $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit'])
       );
-      $this->_searchApi->papaya($this->papaya());
     }
     return $this->_searchApi;
   }
@@ -160,6 +161,12 @@ class PapayaModuleBingPage
   ) {
     $editor = new PapayaAdministrationPluginEditorDialog($content);
     $dialog = $editor->dialog();
+    $dialog->fields[] = new PapayaUiDialogFieldInput(
+      new PapayaUiStringTranslated('Search term parameter'),
+      'search_term_parameter',
+      20,
+      $this->_defaults['search_term_parameter']
+    );
     $dialog->fields[] = new PapayaUiDialogFieldInput(
       new PapayaUiStringTranslated('Bing configuration id'),
       'bing_configuration_id'
