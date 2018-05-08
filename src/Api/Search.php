@@ -22,9 +22,9 @@ class PapayaModuleBingApiSearch extends PapayaObjectInteractive implements Papay
       $result = $this->fetch(
         $searchFor, $this->_limit, $offset
       );
-      $searchNode = $parent->appendElement('search-result');
+      $searchNode = $parent->appendElement('search');
       if ($result instanceof PapayaModuleBingApiSearchResult) {
-        $searchNode->setAttribute('for', $result->getQuery());
+        $searchNode->setAttribute('term', $result->getQuery());
         $urlsNode = $searchNode->appendElement('urls');
         $urlsNode->setAttribute('estimated-total', $result->getEstimatedMatches());
         $urlsNode->setAttribute('offset', $offset);

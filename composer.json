@@ -1,15 +1,17 @@
 {
   "name": "papaya/module-bing",
-  "minimum-stability": "dev",
+  "license": "GPL-2.0",
   "extra" : {
     "document-root" : "htdocs/"
   },
   "require": {
-    "papaya/cms-core": "*"
+    "papaya/cms-core": "^6.1"
   },
   "require-dev": {
-    "papaya/test-framework": "*",
-    "papaya/cms-administration": "*",
-    "papaya/theme-dynamic": "*"
+    "papaya/test-framework": "6.*",
+    "papaya/cms-administration": "6.*",
+    "papaya/theme-dynamic": "1.*",
+
+    "papaya/module-default": "1.*"
   }
 }

@@ -2,40 +2,19 @@
 
 class PapayaModuleBingPage
   extends
-  PapayaObjectInteractive
+    PapayaObjectInteractive
   implements
-  PapayaPluginConfigurable,
-  PapayaPluginAppendable,
-  PapayaPluginQuoteable,
-  PapayaPluginEditable,
-  PapayaPluginCacheable {
+    PapayaPluginConfigurable,
+    PapayaPluginAppendable,
+    PapayaPluginQuoteable,
+    PapayaPluginEditable,
+    PapayaPluginCacheable {
 
-  const DOMAIN_CONNECTOR_GUID = '8ec0c5995d97c9c3cc9c237ad0dc6c0b';
-
-  /**
-   * @var PapayaPluginEditableContent
-   */
-  private $_content;
-
-  /**
-   * @var PapayaObjectParameters
-   */
-  private $_configuration;
-
-  /**
-   * @var PapayaCacheIdentifierDefinition
-   */
-  private $_cacheDefinition;
-
-  /**
-   * @var PapayaObject
-   */
-  private $_owner;
-
-  /**
-   * @var PapayaPluginFilterContent
-   */
-  private $_contentFilters;
+  use
+    PapayaPluginConfigurableAggregation,
+    PapayaPluginEditableAggregation,
+    PapayaPluginCacheableAggregation,
+    PapayaPluginFilterAggregation;
 
   /**
    * @var PapayaModuleBingApiSearch
@@ -47,8 +26,8 @@ class PapayaModuleBingPage
     'bing_result_limit' => 10
   ];
 
-  public function __construct($owner) {
-    $this->_owner = $owner;
+  public function __construct($page) {
+    $this->_page = $page;
   }
 
   /**
@@ -58,10 +37,6 @@ class PapayaModuleBingPage
    * @param PapayaXmlElement $parent
    */
   public function appendTo(PapayaXmlElement $parent) {
-    $pageReference =$this->papaya()->pageReferences->get(
-      $this->papaya()->request->pageId,
-      $this->papaya()->request->languageIdentifier
-    );
     $filters = $this->filters();
     $filters->prepare(
       $this->content()->get('text', ''),
@@ -105,40 +80,6 @@ class PapayaModuleBingPage
   public function appendQuoteTo(PapayaXmlElement $parent) {
     $parent->appendElement('title', [], $this->content()->get('title', ''));
     $parent->appendElement('text')->appendXml($this->content()->get('teaser', ''));
-  }
-
-  /**
-   * The content is an {@see ArrayObject} containing the stored data.
-   *
-   * @see PapayaPluginEditable::content()
-   * @param PapayaPluginEditableContent $content
-   * @return PapayaPluginEditableContent
-   */
-  public function content(PapayaPluginEditableContent $content = NULL) {
-    if (isset($content)) {
-      $this->_content = $content;
-    } elseif (NULL == $this->_content) {
-      $this->_content = new PapayaPluginEditableContent();
-      $this->_content->callbacks()->onCreateEditor = [$this, 'createEditor'];
-    }
-    return $this->_content;
-  }
-
-  /**
-   * The configuration is an {@see ArrayObject} containing options that can affect the
-   * execution of other methods (like appendTo()).
-   *
-   * @see PapayaPluginConfigurable::configuration()
-   * @param PapayaObjectParameters $configuration
-   * @return PapayaObjectParameters
-   */
-  public function configuration(PapayaObjectParameters $configuration = NULL) {
-    if (isset($configuration)) {
-      $this->_configuration = $configuration;
-    } elseif (NULL == $this->_configuration) {
-      $this->_configuration = new PapayaObjectParameters();
-    }
-    return $this->_configuration;
   }
 
   /**
@@ -212,32 +153,16 @@ class PapayaModuleBingPage
   }
 
   /**
-   * Define the code definition parameters for the output.
+   * Define the cache definition parameters for the output.
    *
-   * @see PapayaPluginCacheable::cacheable()
-   * @param PapayaCacheIdentifierDefinition $definition
    * @return PapayaCacheIdentifierDefinition
    */
-  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
-    if (isset($definition)) {
-      $this->_cacheDefinition = $definition;
-    } elseif (NULL == $this->_cacheDefinition) {
-      $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
-        new PapayaCacheIdentifierDefinitionPage(),
-        new PapayaCacheIdentifierDefinitionParameters(
-          ['q', 'q_page']
-        )
-      );
-    }
-    return $this->_cacheDefinition;
-  }
-
-  public function filters(PapayaPluginFilterContent $filters = NULL) {
-    if (isset($filters)) {
-      $this->_contentFilters = $filters;
-    } elseif (NULL == $this->_contentFilters) {
-      $this->_contentFilters = new PapayaPluginFilterContentRecords($this->_owner);
-    }
-    return $this->_contentFilters;
+  public function createCacheDefinition() {
+    return new PapayaCacheIdentifierDefinitionGroup(
+      new PapayaCacheIdentifierDefinitionPage(),
+      new PapayaCacheIdentifierDefinitionParameters(
+        ['q', 'q_page']
+      )
+    );
   }
 }
