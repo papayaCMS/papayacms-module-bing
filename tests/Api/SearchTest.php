@@ -1,13 +1,15 @@
 <?php
 
-class PapayaModuleBingPageSearchTest extends PapayaTestCase {
+namespace Papaya\Module\Bing\Api;
+
+class SearchTest extends \PapayaTestCase {
 
   public function testNoQueryExpectingNoAppendedNodes() {
-    $search = new PapayaModuleBingApiSearch(
+    $search = new Search(
       '', '', ''
     );
     $search->papaya($this->mockPapaya()->application());
-    $document = new PapayaXmlDocument();
+    $document = new \PapayaXmlDocument();
     $result = $document->appendElement('test');
     $result->append($search);
     $this->assertXmlStringEqualsXmlString(

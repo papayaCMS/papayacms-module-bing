@@ -1,6 +1,8 @@
 <?php
 
-class PapayaModuleBingApiSearchResult implements IteratorAggregate, Countable {
+namespace Papaya\Module\Bing\Api\Search;
+
+class Result implements \IteratorAggregate, \Countable {
 
   private $_response;
   private $_pages;
@@ -40,11 +42,11 @@ class PapayaModuleBingApiSearchResult implements IteratorAggregate, Countable {
   }
 
   public function getIterator() {
-    return new ArrayIterator($this->getPages());
+    return new \ArrayIterator($this->getPages());
   }
 
   public function count() {
-    return count($this->getPages());
+    return \count($this->getPages());
   }
 
 }

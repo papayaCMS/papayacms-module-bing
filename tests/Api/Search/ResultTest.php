@@ -1,6 +1,8 @@
 <?php
 
-class PapayaModuleBingPageSearchResultTest extends PapayaTestCase {
+namespace Papaya\Module\Bing\Api\Search;
+
+class ResultTest extends \PapayaTestCase {
 
   private static $_VALID_RESULT = array(
     '_type' => 'SearchResponse',
@@ -25,12 +27,12 @@ class PapayaModuleBingPageSearchResultTest extends PapayaTestCase {
   );
 
   public function testGetEstimatedMatchesExpecting1() {
-    $result = new PapayaModuleBingApiSearchResult(self::$_VALID_RESULT);
+    $result = new Result(self::$_VALID_RESULT);
     $this->assertSame(1, $result->getEstimatedMatches());
   }
 
   public function testGetQueryExpectingC50() {
-    $result = new PapayaModuleBingApiSearchResult(self::$_VALID_RESULT);
+    $result = new Result(self::$_VALID_RESULT);
     $this->assertSame('C50', $result->getQuery());
   }
 

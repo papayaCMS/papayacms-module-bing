@@ -1,12 +1,14 @@
 <?php
 
-class PapayaModuleBingPageTest extends PapayaTestCase {
+namespace Papaya\Module\Bing;
+
+class PageTest extends \PapayaTestCase {
 
   public function testSearchApiGetAfterSet() {
-    $page = new PapayaModuleBingPage(
-      $this->createMock('PapayaObject')
+    $page = new Page(
+      $this->createMock(\PapayaObject::class)
     );
-    $searchApi = $this->createMock('PapayaModuleBingApiSearch');
+    $searchApi = $this->createMock(Api\Search::class);
     $page->searchApi($searchApi);
     $this->assertSame($searchApi, $page->searchApi());
   }

@@ -1,6 +1,8 @@
 <?php
 
-class PapayaModuleBingApiSearch extends PapayaObjectInteractive implements PapayaXmlAppendable {
+namespace Papaya\Module\Bing\Api;
+
+class Search extends \PapayaObjectInteractive implements \PapayaXmlAppendable {
 
   private $_endPoint;
   private $_key;
@@ -14,16 +16,16 @@ class PapayaModuleBingApiSearch extends PapayaObjectInteractive implements Papay
     $this->_limit = (int)$limit;
   }
 
-  public function appendTo(PapayaXmlElement $parent) {
+  public function appendTo(\PapayaXmlElement $parent) {
     $searchFor = $this->parameters()->get('q', '');
     $pageIndex = max(1, $this->parameters()->get('q_page', 1));
-    $offset =  $pageIndex * $this->_limit - $this->_limit;
+    $offset = $pageIndex * $this->_limit - $this->_limit;
     if ($searchFor !== '') {
       $result = $this->fetch(
         $searchFor, $this->_limit, $offset
       );
       $searchNode = $parent->appendElement('search');
-      if ($result instanceof PapayaModuleBingApiSearchResult) {
+      if ($result instanceof Search\Result) {
         $searchNode->setAttribute('term', $result->getQuery());
         $urlsNode = $searchNode->appendElement('urls');
         $urlsNode->setAttribute('estimated-total', $result->getEstimatedMatches());
@@ -35,7 +37,7 @@ class PapayaModuleBingApiSearch extends PapayaObjectInteractive implements Papay
           $urlNode->appendElement('title', [], $url['title']);
           $urlNode->appendElement('snippet', [], $url['snippet']);
         }
-        $searchNode->append(new PapayaUiPagingCount('q_page', $pageIndex, $result->getEstimatedMatches()));
+        $searchNode->append(new \PapayaUiPagingCount('q_page', $pageIndex, $result->getEstimatedMatches()));
       }
     }
   }
@@ -56,13 +58,13 @@ class PapayaModuleBingApiSearch extends PapayaObjectInteractive implements Papay
       $limit,
       $offset
     );
-    $response = file_get_contents($url, false, $context);
+    $response = file_get_contents($url, FALSE, $context);
     if ($response) {
       $result = json_decode($response, JSON_OBJECT_AS_ARRAY);
       $type = isset($result['_type']) ? $result['_type'] : '';
       switch ($type) {
-      case 'SearchResponse':
-        return new PapayaModuleBingApiSearchResult($result);
+        case 'SearchResponse':
+          return new Search\Result($result);
       }
     }
     return NULL;

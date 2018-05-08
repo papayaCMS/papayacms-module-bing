@@ -1,23 +1,25 @@
 <?php
 
-class PapayaModuleBingPage
+namespace Papaya\Module\Bing;
+
+class Page
   extends
-    PapayaObjectInteractive
+    \PapayaObjectInteractive
   implements
-    PapayaPluginConfigurable,
-    PapayaPluginAppendable,
-    PapayaPluginQuoteable,
-    PapayaPluginEditable,
-    PapayaPluginCacheable {
+    \PapayaPluginConfigurable,
+    \PapayaPluginAppendable,
+    \PapayaPluginQuoteable,
+    \PapayaPluginEditable,
+    \PapayaPluginCacheable {
 
   use
-    PapayaPluginConfigurableAggregation,
-    PapayaPluginEditableAggregation,
-    PapayaPluginCacheableAggregation,
-    PapayaPluginFilterAggregation;
+    \PapayaPluginConfigurableAggregation,
+    \PapayaPluginEditableAggregation,
+    \PapayaPluginCacheableAggregation,
+    \PapayaPluginFilterAggregation;
 
   /**
-   * @var PapayaModuleBingApiSearch
+   * @var \Papaya\Module\Bing\Api\Search
    */
   private $_searchApi;
 
@@ -34,9 +36,9 @@ class PapayaModuleBingPage
    * Append the page output xml to the DOM.
    *
    * @see PapayaXmlAppendable::appendTo()
-   * @param PapayaXmlElement $parent
+   * @param \PapayaXmlElement $parent
    */
-  public function appendTo(PapayaXmlElement $parent) {
+  public function appendTo(\PapayaXmlElement $parent) {
     $filters = $this->filters();
     $filters->prepare(
       $this->content()->get('text', ''),
@@ -52,14 +54,14 @@ class PapayaModuleBingPage
   }
 
   /**
-   * @param PapayaModuleBingApiSearch $searchApi
-   * @return PapayaModuleBingApiSearch
+   * @param \Papaya\Module\Bing\Api\Search $searchApi
+   * @return \Papaya\Module\Bing\Api\Search
    */
-  public function searchApi(PapayaModuleBingApiSearch $searchApi = NULL) {
+  public function searchApi(Api\Search $searchApi = NULL) {
     if (NULL !== $searchApi) {
       $this->_searchApi = $searchApi;
     } elseif (NULL === $this->_searchApi) {
-      $this->_searchApi = new PapayaModuleBingApiSearch(
+      $this->_searchApi = new Api\Search(
         $this->content()->get('bing_api_endpoint', $this->_defaults['bing_api_endpoint']),
         $this->content()->get('bing_api_key', ''),
         $this->content()->get('bing_configuration_id', ''),
@@ -73,11 +75,11 @@ class PapayaModuleBingPage
   /**
    * Append the teaser output xml to the DOM.
    *
-   * @see PapayaXmlAppendable::appendTo()
-   * @param PapayaXmlElement $parent
-   * @return NULL|PapayaXmlElement|void
+   * @see \PapayaXmlAppendable::appendTo()
+   * @param \PapayaXmlElement $parent
+   * @return NULL|\PapayaXmlElement|void
    */
-  public function appendQuoteTo(PapayaXmlElement $parent) {
+  public function appendQuoteTo(\PapayaXmlElement $parent) {
     $parent->appendElement('title', [], $this->content()->get('title', ''));
     $parent->appendElement('text')->appendXml($this->content()->get('teaser', ''));
   }
@@ -89,64 +91,61 @@ class PapayaModuleBingPage
    *
    * @see PapayaPluginEditableContent::editor()
    *
-   * @param object $callbackContext
-   * @param PapayaPluginEditableContent $content
-   * @return PapayaPluginEditor
+   * @param \PapayaPluginEditableContent $content
+   * @return \PapayaPluginEditor
    * @throws \UnexpectedValueException
    */
   public function createEditor(
-    /** @noinspection PhpUnusedParameterInspection */
-    $callbackContext,
-    PapayaPluginEditableContent $content
+    \PapayaPluginEditableContent $content
   ) {
-    $editor = new PapayaAdministrationPluginEditorDialog($content);
+    $editor = new \PapayaAdministrationPluginEditorDialog($content);
     $dialog = $editor->dialog();
-    $dialog->fields[] = new PapayaUiDialogFieldInput(
-      new PapayaUiStringTranslated('Bing configuration id'),
+    $dialog->fields[] = new \PapayaUiDialogFieldInput(
+      new \PapayaUiStringTranslated('Bing configuration id'),
       'bing_configuration_id'
     );
-    $dialog->fields[] = new PapayaUiDialogFieldInput(
-      new PapayaUiStringTranslated('Bing API Key'),
+    $dialog->fields[] = new \PapayaUiDialogFieldInput(
+      new \PapayaUiStringTranslated('Bing API Key'),
       'bing_api_key'
     );
-    $dialog->fields[] = new PapayaUiDialogFieldInput(
-      new PapayaUiStringTranslated('Bing API Endpoint'),
+    $dialog->fields[] = new \PapayaUiDialogFieldInput(
+      new \PapayaUiStringTranslated('Bing API Endpoint'),
       'bing_api_endpoint',
       1024,
       $this->_defaults['bing_api_endpoint'],
-      new PapayaFilterUrl()
+      new \PapayaFilterUrl()
     );
-    $dialog->fields[] = new PapayaUiDialogFieldInputNumber(
-      new PapayaUiStringTranslated('Items per page'),
+    $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
+      new \PapayaUiStringTranslated('Items per page'),
       'bing_result_limit',
       $this->_defaults['bing_result_limit'],
       TRUE,
       2,
       3
     );
-    $dialog->fields[] = $group = new PapayaUiDialogFieldGroup(
-      new PapayaUiStringTranslated('Texts')
+    $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
+      new \PapayaUiStringTranslated('Texts')
     );
-    $group->fields[] = $field = new PapayaUiDialogFieldInput(
-      new PapayaUiStringTranslated('Title'),
+    $group->fields[] = $field = new \PapayaUiDialogFieldInput(
+      new \PapayaUiStringTranslated('Title'),
       'title',
       400
     );
     $field->setMandatory(TRUE);
-    $group->fields[] = $field = new PapayaUiDialogFieldTextareaRichtext(
-      new PapayaUiStringTranslated('Teaser'),
+    $group->fields[] = $field = new \PapayaUiDialogFieldTextareaRichtext(
+      new \PapayaUiStringTranslated('Teaser'),
       'teaser',
       5,
       '',
-      new PapayaFilterXml(),
-      PapayaUiDialogFieldTextareaRichtext::RTE_SIMPLE
+      new \PapayaFilterXml(),
+      \PapayaUiDialogFieldTextareaRichtext::RTE_SIMPLE
     );
-    $group->fields[] = $field = new PapayaUiDialogFieldTextareaRichtext(
-      new PapayaUiStringTranslated('Text'),
+    $group->fields[] = $field = new \PapayaUiDialogFieldTextareaRichtext(
+      new \PapayaUiStringTranslated('Text'),
       'text',
       15,
       '',
-      new PapayaFilterXml()
+      new \PapayaFilterXml()
     );
     $editor->papaya($this->papaya());
     return $editor;
@@ -155,12 +154,12 @@ class PapayaModuleBingPage
   /**
    * Define the cache definition parameters for the output.
    *
-   * @return PapayaCacheIdentifierDefinition
+   * @return \PapayaCacheIdentifierDefinition
    */
   public function createCacheDefinition() {
-    return new PapayaCacheIdentifierDefinitionGroup(
-      new PapayaCacheIdentifierDefinitionPage(),
-      new PapayaCacheIdentifierDefinitionParameters(
+    return new \PapayaCacheIdentifierDefinitionGroup(
+      new \PapayaCacheIdentifierDefinitionPage(),
+      new \PapayaCacheIdentifierDefinitionParameters(
         ['q', 'q_page']
       )
     );
