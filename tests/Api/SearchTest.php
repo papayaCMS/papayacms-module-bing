@@ -6,7 +6,7 @@ class SearchTest extends \PapayaTestCase {
 
   public function testNoQueryExpectingNoAppendedNodes() {
     $search = new Search(
-      '', '', ''
+      '', '', '', ''
     );
     $search->papaya($this->mockPapaya()->application());
     $document = new \PapayaXmlDocument();
