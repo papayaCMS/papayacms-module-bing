@@ -4,6 +4,7 @@
   <description>Bing search integration</description>
   <modules>
     <module type="page" guid="0cd61560531ce610431a0b038bf08c6e" name="Bing Search Page" class="\Papaya\Module\Bing\Page" file="Page.php">Show search results from Bing</module>
+    <module type="connector" guid="8d56ab8c4c39f5d086c467cbf96ed27e" name="Bing Api Options" class="\Papaya\Module\Bing\Api" file="Api.php"/>
   </modules>
   <tables/>
 </modulegroup>

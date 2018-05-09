@@ -2,8 +2,6 @@
 
 namespace Papaya\Module\Bing;
 
-use PapayaPluginEditableOptions;
-
 class Page
   extends
     \PapayaObjectInteractive
@@ -12,15 +10,15 @@ class Page
     \PapayaPluginAppendable,
     \PapayaPluginQuoteable,
     \PapayaPluginEditable,
-    \PapayaPluginAdaptable,
     \PapayaPluginCacheable {
 
   use
     \PapayaPluginConfigurableAggregation,
     \PapayaPluginEditableContentAggregation,
-    \PapayaPluginEditableOptionsAggregation,
     \PapayaPluginCacheableAggregation,
     \PapayaPluginFilterAggregation;
+
+  const API_GUID = '8d56ab8c4c39f5d086c467cbf96ed27e';
 
   /**
    * @var \Papaya\Module\Bing\Api\Search
@@ -28,7 +26,6 @@ class Page
   private $_searchApi;
 
   private $_defaults = [
-    'BING_API_ENDPOINT' => 'https://api.cognitive.microsoft.com/bingcustomsearch/v7.0/search',
     'bing_result_limit' => 10,
     'search_term_parameter' => 'q'
   ];
@@ -66,11 +63,11 @@ class Page
     if (NULL !== $searchApi) {
       $this->_searchApi = $searchApi;
     } elseif (NULL === $this->_searchApi) {
-      $this->_searchApi = new Api\Search(
-        $this->content()->get('search_term_parameter', $this->_defaults['search_term_parameter']),
-        $this->options()->get('BING_API_ENDPOINT', $this->_defaults['BING_API_ENDPOINT']),
-        $this->options()->get('BING_API_KEY', ''),
+      /** @var API $api */
+      $api = $this->papaya()->plugins->get(self::API_GUID, $this);
+      $this->_searchApi = $api->createSearchApi(
         $this->content()->get('bing_configuration_id', ''),
+        $this->content()->get('search_term_parameter', $this->_defaults['search_term_parameter']),
         $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit'])
       );
       $this->_searchApi->papaya($this->papaya());
@@ -147,24 +144,6 @@ class Page
       15,
       '',
       new \PapayaFilterXml()
-    );
-    $editor->papaya($this->papaya());
-    return $editor;
-  }
-
-  public function createOptionsEditor(PapayaPluginEditableOptions $content) {
-    $editor = new \PapayaAdministrationPluginEditorDialog($content);
-    $dialog = $editor->dialog();
-    $dialog->fields[] = new \PapayaUiDialogFieldInput(
-      new \PapayaUiStringTranslated('Bing API Subscription Key'),
-      'BING_API_KEY'
-    );
-    $dialog->fields[] = new \PapayaUiDialogFieldInput(
-      new \PapayaUiStringTranslated('Bing API Endpoint'),
-      'BING_API_ENDPOINT',
-      1024,
-      $this->_defaults['BING_API_ENDPOINT'],
-      new \PapayaFilterUrl()
     );
     $editor->papaya($this->papaya());
     return $editor;

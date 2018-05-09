@@ -10,11 +10,11 @@ class Search extends \PapayaObjectInteractive implements \PapayaXmlAppendable {
   private $_identifier;
   private $_limit;
 
-  public function __construct($parameterName, $endPoint, $key, $identifier, $limit = 10) {
-    $this->_parameterName = empty($parameterName) ? 'q' : $parameterName;
+  public function __construct($endPoint, $key, $identifier, $parameterName, $limit = 10) {
     $this->_endPoint = $endPoint;
     $this->_key = $key;
     $this->_identifier = $identifier;
+    $this->_parameterName = empty($parameterName) ? 'q' : $parameterName;
     $this->_limit = (int)$limit;
   }
 
