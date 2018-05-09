@@ -4,12 +4,14 @@ namespace Papaya\Module\Bing\Api;
 
 class Search extends \PapayaObjectInteractive implements \PapayaXmlAppendable {
 
+  private $_parameterName;
   private $_endPoint;
   private $_key;
   private $_identifier;
   private $_limit;
 
-  public function __construct($endPoint, $key, $identifier, $limit = 10) {
+  public function __construct($parameterName, $endPoint, $key, $identifier, $limit = 10) {
+    $this->_parameterName = empty($parameterName) ? 'q' : $parameterName;
     $this->_endPoint = $endPoint;
     $this->_key = $key;
     $this->_identifier = $identifier;
@@ -17,9 +19,9 @@ class Search extends \PapayaObjectInteractive implements \PapayaXmlAppendable {
   }
 
   public function appendTo(\PapayaXmlElement $parent) {
-    $searchFor = $this->parameters()->get('q', '');
+    $searchFor = $this->parameters()->get($this->_parameterName, '');
     $pageIndex = max(1, $this->parameters()->get('q_page', 1));
-    $offset = $pageIndex * $this->_limit - $this->_limit;
+    $offset =  $pageIndex * $this->_limit - $this->_limit;
     if ($searchFor !== '') {
       $result = $this->fetch(
         $searchFor, $this->_limit, $offset
@@ -37,7 +39,11 @@ class Search extends \PapayaObjectInteractive implements \PapayaXmlAppendable {
           $urlNode->appendElement('title', [], $url['title']);
           $urlNode->appendElement('snippet', [], $url['snippet']);
         }
-        $searchNode->append(new \PapayaUiPagingCount('q_page', $pageIndex, $result->getEstimatedMatches()));
+        $paging = new \PapayaUiPagingCount('q_page', $pageIndex, $result->getEstimatedMatches());
+        $paging->reference()->setParameters(
+          array($this->_parameterName => $searchFor)
+        );
+        $searchNode->append($paging);
       }
     }
   }
@@ -58,13 +64,13 @@ class Search extends \PapayaObjectInteractive implements \PapayaXmlAppendable {
       $limit,
       $offset
     );
-    $response = file_get_contents($url, FALSE, $context);
+    $response = file_get_contents($url, false, $context);
     if ($response) {
       $result = json_decode($response, JSON_OBJECT_AS_ARRAY);
       $type = isset($result['_type']) ? $result['_type'] : '';
       switch ($type) {
-        case 'SearchResponse':
-          return new Search\Result($result);
+      case 'SearchResponse':
+        return new Search\Result($result);
       }
     }
     return NULL;

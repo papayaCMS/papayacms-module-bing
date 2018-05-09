@@ -2,6 +2,8 @@
 
 namespace Papaya\Module\Bing;
 
+use PapayaPluginEditableOptions;
+
 class Page
   extends
     \PapayaObjectInteractive
@@ -10,11 +12,13 @@ class Page
     \PapayaPluginAppendable,
     \PapayaPluginQuoteable,
     \PapayaPluginEditable,
+    \PapayaPluginAdaptable,
     \PapayaPluginCacheable {
 
   use
     \PapayaPluginConfigurableAggregation,
-    \PapayaPluginEditableAggregation,
+    \PapayaPluginEditableContentAggregation,
+    \PapayaPluginEditableOptionsAggregation,
     \PapayaPluginCacheableAggregation,
     \PapayaPluginFilterAggregation;
 
@@ -24,8 +28,9 @@ class Page
   private $_searchApi;
 
   private $_defaults = [
-    'bing_api_endpoint' => 'https://api.cognitive.microsoft.com/bingcustomsearch/v7.0/search',
-    'bing_result_limit' => 10
+    'BING_API_ENDPOINT' => 'https://api.cognitive.microsoft.com/bingcustomsearch/v7.0/search',
+    'bing_result_limit' => 10,
+    'search_term_parameter' => 'q'
   ];
 
   public function __construct($page) {
@@ -62,8 +67,9 @@ class Page
       $this->_searchApi = $searchApi;
     } elseif (NULL === $this->_searchApi) {
       $this->_searchApi = new Api\Search(
-        $this->content()->get('bing_api_endpoint', $this->_defaults['bing_api_endpoint']),
-        $this->content()->get('bing_api_key', ''),
+        $this->content()->get('search_term_parameter', $this->_defaults['search_term_parameter']),
+        $this->options()->get('BING_API_ENDPOINT', $this->_defaults['BING_API_ENDPOINT']),
+        $this->options()->get('BING_API_KEY', ''),
         $this->content()->get('bing_configuration_id', ''),
         $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit'])
       );
@@ -101,19 +107,14 @@ class Page
     $editor = new \PapayaAdministrationPluginEditorDialog($content);
     $dialog = $editor->dialog();
     $dialog->fields[] = new \PapayaUiDialogFieldInput(
+      new \PapayaUiStringTranslated('Search term parameter'),
+      'search_term_parameter',
+      20,
+      $this->_defaults['search_term_parameter']
+    );
+    $dialog->fields[] = new \PapayaUiDialogFieldInput(
       new \PapayaUiStringTranslated('Bing configuration id'),
       'bing_configuration_id'
-    );
-    $dialog->fields[] = new \PapayaUiDialogFieldInput(
-      new \PapayaUiStringTranslated('Bing API Key'),
-      'bing_api_key'
-    );
-    $dialog->fields[] = new \PapayaUiDialogFieldInput(
-      new \PapayaUiStringTranslated('Bing API Endpoint'),
-      'bing_api_endpoint',
-      1024,
-      $this->_defaults['bing_api_endpoint'],
-      new \PapayaFilterUrl()
     );
     $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
       new \PapayaUiStringTranslated('Items per page'),
@@ -151,17 +152,30 @@ class Page
     return $editor;
   }
 
+  public function createOptionsEditor(PapayaPluginEditableOptions $content) {
+    $editor = new \PapayaAdministrationPluginEditorDialog($content);
+    $dialog = $editor->dialog();
+    $dialog->fields[] = new \PapayaUiDialogFieldInput(
+      new \PapayaUiStringTranslated('Bing API Key'),
+      'BING_API_KEY'
+    );
+    $dialog->fields[] = new \PapayaUiDialogFieldInput(
+      new \PapayaUiStringTranslated('Bing API Endpoint'),
+      'BING_API_ENDPOINT',
+      1024,
+      $this->_defaults['BING_API_ENDPOINT'],
+      new \PapayaFilterUrl()
+    );
+    $editor->papaya($this->papaya());
+    return $editor;
+  }
+
   /**
    * Define the cache definition parameters for the output.
    *
    * @return \PapayaCacheIdentifierDefinition
    */
   public function createCacheDefinition() {
-    return new \PapayaCacheIdentifierDefinitionGroup(
-      new \PapayaCacheIdentifierDefinitionPage(),
-      new \PapayaCacheIdentifierDefinitionParameters(
-        ['q', 'q_page']
-      )
-    );
+    return new \PapayaCacheIdentifierDefinitionUrl();
   }
 }
