@@ -156,7 +156,7 @@ class Page
     $editor = new \PapayaAdministrationPluginEditorDialog($content);
     $dialog = $editor->dialog();
     $dialog->fields[] = new \PapayaUiDialogFieldInput(
-      new \PapayaUiStringTranslated('Bing API Key'),
+      new \PapayaUiStringTranslated('Bing API Subscription Key'),
       'BING_API_KEY'
     );
     $dialog->fields[] = new \PapayaUiDialogFieldInput(
