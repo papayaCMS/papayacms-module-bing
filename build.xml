@@ -157,9 +157,15 @@
       <catch>
         <echo level="warning">There was an error while reading papaya core version information.</echo>
         <echo level="debug">${error}</echo>
-        <property name="revision.project" value="unknown" override="true"/>
+        <property name="revision.papaya" value="unknown" override="true"/>
       </catch>
     </trycatch>
+  </target>
+
+  <target name="run" description="Start the PHP built-in webserver">
+    <exec executable="php" passthru="true">
+      <arg line="-S localhost:8080 -t ./htdocs server.php"/>
+    </exec>
   </target>
 
 </project>
