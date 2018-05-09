@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "eb40a24b5f87cd6ffcbcd739ee800cb7",
+    "content-hash": "2c5e65b2227aba339f0a153fdcf5c9b8",
     "packages": [
         {
             "name": "papaya/cms-core",
-            "version": "6.1.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/papayaCMS/papayacms-core.git",
-                "reference": "cf734d4dc04913764ee4f112f1e518029d42467c"
+                "reference": "4bb97f0c0efcae718d2d3e9593297487900958aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/papayaCMS/papayacms-core/zipball/cf734d4dc04913764ee4f112f1e518029d42467c",
-                "reference": "cf734d4dc04913764ee4f112f1e518029d42467c",
+                "url": "https://api.github.com/repos/papayaCMS/papayacms-core/zipball/4bb97f0c0efcae718d2d3e9593297487900958aa",
+                "reference": "4bb97f0c0efcae718d2d3e9593297487900958aa",
                 "shasum": ""
             },
             "require": {
@@ -46,7 +46,7 @@
             ],
             "description": "papaya CMS core framework",
             "homepage": "http://www.papaya-cms.com/",
-            "time": "2018-05-03T11:50:41+00:00"
+            "time": "2018-05-08T18:51:44+00:00"
         }
     ],
     "packages-dev": [
@@ -211,7 +211,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "papaya/cms-core": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
