@@ -2,53 +2,21 @@
 
 namespace Papaya\Module\Bing\Api;
 
-class Search extends \PapayaObjectInteractive implements \PapayaXmlAppendable {
+class Search {
 
-  private $_parameterName;
   private $_endPoint;
   private $_key;
   private $_identifier;
   private $_limit;
 
-  public function __construct($endPoint, $key, $identifier, $parameterName, $limit = 10) {
+  public function __construct($endPoint, $key, $identifier, $limit = 10) {
     $this->_endPoint = $endPoint;
     $this->_key = $key;
     $this->_identifier = $identifier;
-    $this->_parameterName = empty($parameterName) ? 'q' : $parameterName;
     $this->_limit = (int)$limit;
   }
 
-  public function appendTo(\PapayaXmlElement $parent) {
-    $searchFor = $this->parameters()->get($this->_parameterName, '');
-    $pageIndex = max(1, $this->parameters()->get('q_page', 1));
-    $offset =  $pageIndex * $this->_limit - $this->_limit;
-    if ($searchFor !== '') {
-      $result = $this->fetch(
-        $searchFor, $this->_limit, $offset
-      );
-      $searchNode = $parent->appendElement('search');
-      if ($result instanceof Search\Result) {
-        $searchNode->setAttribute('term', $result->getQuery());
-        $urlsNode = $searchNode->appendElement('urls');
-        $urlsNode->setAttribute('estimated-total', $result->getEstimatedMatches());
-        $urlsNode->setAttribute('offset', $offset);
-        foreach ($result as $url) {
-          $urlNode = $urlsNode->appendElement('url');
-          $urlNode->setAttribute('href', $url['url']);
-          $urlNode->setAttribute('fixed-position', $url['fixed_position'] ? 'true' : 'false');
-          $urlNode->appendElement('title', [], $url['title']);
-          $urlNode->appendElement('snippet', [], $url['snippet']);
-        }
-        $paging = new \PapayaUiPagingCount('q_page', $pageIndex, $result->getEstimatedMatches());
-        $paging->reference()->setParameters(
-          array($this->_parameterName => $searchFor)
-        );
-        $searchNode->append($paging);
-      }
-    }
-  }
-
-  public function fetch($searchFor, $limit = 0, $offset = 0) {
+  public function fetch($searchFor, $pageIndex = 1) {
     $options = array(
       'http' => array(
         'method' => 'GET',
@@ -56,12 +24,13 @@ class Search extends \PapayaObjectInteractive implements \PapayaXmlAppendable {
       )
     );
     $context = stream_context_create($options);
+    $offset =  $pageIndex * $this->_limit - $this->_limit;
     $url = sprintf(
       '%s?q=%s&customconfig=%s&count=%d&offset=%d',
       $this->_endPoint,
       urlencode($searchFor),
       urlencode($this->_identifier),
-      $limit,
+      $this->_limit,
       $offset
     );
     $response = file_get_contents($url, false, $context);

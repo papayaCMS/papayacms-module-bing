@@ -35,6 +35,18 @@ class Page
   }
 
   /**
+   * Append the teaser output xml to the DOM.
+   *
+   * @see \PapayaXmlAppendable::appendTo()
+   * @param \PapayaXmlElement $parent
+   * @return NULL|\PapayaXmlElement|void
+   */
+  public function appendQuoteTo(\PapayaXmlElement $parent) {
+    $parent->appendElement('title', [], $this->content()->get('title', ''));
+    $parent->appendElement('text')->appendXml($this->content()->get('teaser', ''));
+  }
+
+  /**
    * Append the page output xml to the DOM.
    *
    * @see PapayaXmlAppendable::appendTo()
@@ -51,13 +63,36 @@ class Page
     $parent->appendElement('text')->appendXml(
       $filters->applyTo($this->content()->get('text', ''))
     );
-    $parent->append($this->searchApi());
+
+    $searchParameter = $this->content()->get('search_term_parameter', $this->_defaults['search_term_parameter']);
+    $searchFor = $this->parameters()->get($searchParameter, '');
+    $pageIndex = max(1, $this->parameters()->get('q_page', 1));
+    $pageCount = $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit']);
+    $searchResult = $this->searchApi()->fetch($searchFor, $pageIndex);
+    $searchNode = $parent->appendElement('search');
+    if ($searchResult instanceof Api\Search\Result) {
+      $searchNode->setAttribute('term', $searchResult->getQuery());
+      $urlsNode = $searchNode->appendElement('urls');
+      $urlsNode->setAttribute('estimated-total', $searchResult->getEstimatedMatches());
+      $urlsNode->setAttribute('offset', ($pageIndex - 1) * $pageCount);
+      foreach ($searchResult as $url) {
+        $urlNode = $urlsNode->appendElement('url');
+        $urlNode->setAttribute('href', $url['url']);
+        $urlNode->setAttribute('fixed-position', $url['fixed_position'] ? 'true' : 'false');
+        $urlNode->appendElement('title', [], $url['title']);
+        $urlNode->appendElement('snippet', [], $url['snippet']);
+      }
+      $paging = new \PapayaUiPagingCount('q_page', $pageIndex, $searchResult->getEstimatedMatches());
+      $paging->reference()->setParameters(array($searchParameter => $searchFor));
+      $searchNode->append($paging);
+    }
+
     $parent->append($filters);
   }
 
   /**
-   * @param \Papaya\Module\Bing\Api\Search $searchApi
-   * @return \Papaya\Module\Bing\Api\Search
+   * @param Api\Search $searchApi
+   * @return Api\Search
    */
   public function searchApi(Api\Search $searchApi = NULL) {
     if (NULL !== $searchApi) {
@@ -67,24 +102,10 @@ class Page
       $api = $this->papaya()->plugins->get(self::API_GUID, $this);
       $this->_searchApi = $api->createSearchApi(
         $this->content()->get('bing_configuration_id', ''),
-        $this->content()->get('search_term_parameter', $this->_defaults['search_term_parameter']),
         $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit'])
       );
-      $this->_searchApi->papaya($this->papaya());
     }
     return $this->_searchApi;
-  }
-
-  /**
-   * Append the teaser output xml to the DOM.
-   *
-   * @see \PapayaXmlAppendable::appendTo()
-   * @param \PapayaXmlElement $parent
-   * @return NULL|\PapayaXmlElement|void
-   */
-  public function appendQuoteTo(\PapayaXmlElement $parent) {
-    $parent->appendElement('title', [], $this->content()->get('title', ''));
-    $parent->appendElement('text')->appendXml($this->content()->get('teaser', ''));
   }
 
   /**

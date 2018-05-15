@@ -33,12 +33,11 @@ class Api
     return $editor;
   }
 
-  public function createSearchApi($configurationIdentifier, $parameterName, $resultLimit) {
+  public function createSearchApi($configurationIdentifier, $resultLimit) {
     return new Api\Search(
       $this->options()->get('BING_API_ENDPOINT', self::$_defaults['BING_API_ENDPOINT']),
       $this->options()->get('BING_API_KEY', ''),
       $configurationIdentifier,
-      $parameterName,
       $resultLimit
     );
   }
