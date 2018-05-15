@@ -4,16 +4,15 @@ namespace Papaya\Module\Bing\Api;
 
 class SearchTest extends \PapayaTestCase {
 
-  public function testNoQueryExpectingNoAppendedNodes() {
+  public function testNoQueryExpectingError() {
     $search = new Search(
-      '', '', '', ''
+      '/search', 'abc', '123'
     );
-    $search->papaya($this->mockPapaya()->application());
     $document = new \PapayaXmlDocument();
     $result = $document->appendElement('test');
-    $result->append($search);
+    $result->append($search->fetch(''));
     $this->assertXmlStringEqualsXmlString(
-      '<test/>',
+      '<test><error identifier="EmptyQuery" severity="warning"/></test>',
       $result->saveXml()
     );
   }

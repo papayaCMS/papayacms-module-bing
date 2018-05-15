@@ -8,6 +8,8 @@ class Search {
   private $_key;
   private $_identifier;
   private $_limit;
+  private $_cache;
+  private $_expires;
 
   public function __construct($endPoint, $key, $identifier, $limit = 10) {
     $this->_endPoint = $endPoint;
@@ -16,14 +18,24 @@ class Search {
     $this->_limit = (int)$limit;
   }
 
+  public function cache(\PapayaCacheService $cache = NULL, $expires = 0) {
+    if (NULL !== $cache) {
+      $this->_cache = $cache;
+      $this->_expires = (int)$expires;
+    }
+    return $this->_cache;
+  }
+
+  /**
+   * @param string $searchFor
+   * @param int $pageIndex
+   * @return Search\Error\EmptyQuery|Search\Result
+   */
   public function fetch($searchFor, $pageIndex = 1) {
-    $options = array(
-      'http' => array(
-        'method' => 'GET',
-        'header' => 'Ocp-Apim-Subscription-Key: '.$this->_key."\r\n"
-      )
-    );
-    $context = stream_context_create($options);
+    if ('' === trim($searchFor)) {
+      return new Search\Error\EmptyQuery();
+    }
+
     $offset =  $pageIndex * $this->_limit - $this->_limit;
     $url = sprintf(
       '%s?q=%s&customconfig=%s&count=%d&offset=%d',
@@ -33,13 +45,37 @@ class Search {
       $this->_limit,
       $offset
     );
-    $response = file_get_contents($url, false, $context);
+
+    $response = NULL;
+    $cache = NULL;
+    $hasCache = $this->_expires > 0 && ($cache = $this->cache()) && $cache->verify(TRUE);
+    $isCached = FALSE;
+    if (
+      $hasCache &&
+      ($response = $cache->read('BING_CUSTOM_SEARCH', $searchFor, $url, $this->_expires))
+    ) {
+      $isCached = TRUE;
+    } else {
+      $options = array(
+      'http' => array(
+        'method' => 'GET',
+        'header' => 'Ocp-Apim-Subscription-Key: '.$this->_key."\r\n"
+      )
+      );
+      $context = stream_context_create($options);
+      $response = file_get_contents($url, false, $context);
+    }
     if ($response) {
       $result = json_decode($response, JSON_OBJECT_AS_ARRAY);
       $type = isset($result['_type']) ? $result['_type'] : '';
       switch ($type) {
       case 'SearchResponse':
-        return new Search\Result($result);
+        if ($hasCache) {
+          $cache->write(
+            'BING_CUSTOM_SEARCH', $searchFor, $url, $response, $this->_expires
+          );
+        }
+        return new Search\Result($result, $isCached);
       }
     }
     return NULL;

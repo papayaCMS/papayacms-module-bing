@@ -27,7 +27,8 @@ class Page
 
   private $_defaults = [
     'bing_result_limit' => 10,
-    'search_term_parameter' => 'q'
+    'search_term_parameter' => 'q',
+    'bing_result_cache_time' => 0
   ];
 
   public function __construct($page) {
@@ -72,6 +73,7 @@ class Page
     $searchNode = $parent->appendElement('search');
     if ($searchResult instanceof Api\Search\Result) {
       $searchNode->setAttribute('term', $searchResult->getQuery());
+      $searchNode->setAttribute('cached', $searchResult->isFromCache() ? 'true' : 'false');
       $urlsNode = $searchNode->appendElement('urls');
       $urlsNode->setAttribute('estimated-total', $searchResult->getEstimatedMatches());
       $urlsNode->setAttribute('offset', ($pageIndex - 1) * $pageCount);
@@ -102,7 +104,8 @@ class Page
       $api = $this->papaya()->plugins->get(self::API_GUID, $this);
       $this->_searchApi = $api->createSearchApi(
         $this->content()->get('bing_configuration_id', ''),
-        $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit'])
+        $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit']),
+        $this->content()->get('bing_result_cache_time', $this->_defaults['bing_result_cache_time'])
       );
     }
     return $this->_searchApi;
@@ -141,6 +144,14 @@ class Page
       TRUE,
       2,
       3
+    );
+    $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
+      new \PapayaUiStringTranslated('Api Cache Time'),
+      'bing_result_cache_time',
+      $this->_defaults['bing_result_cache_time'],
+      FALSE,
+      NULL,
+      10
     );
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Texts')

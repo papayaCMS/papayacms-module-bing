@@ -24,6 +24,7 @@ class BoxRelated
 
   private $_defaults = [
     'bing_result_limit' => 5,
+    'bing_result_cache_time' => 0,
     'search_term_parameter' => 'q',
     'search_term_source_xpath' => 'string(//topic/title)'
   ];
@@ -56,6 +57,7 @@ class BoxRelated
     );
     if ($searchResult instanceof Api\Search\Result) {
       $searchNode->setAttribute('term', $searchResult->getQuery());
+      $searchNode->setAttribute('cached', $searchResult->isFromCache() ? 'true' : 'false');
       $urlsNode = $searchNode->appendElement('urls');
       foreach ($searchResult as $url) {
         $urlNode = $urlsNode->appendElement('url');
@@ -136,7 +138,8 @@ class BoxRelated
       $api = $this->papaya()->plugins->get(self::API_GUID, $this);
       $this->_searchApi = $api->createSearchApi(
         $this->content()->get('bing_configuration_id', ''),
-        $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit'])
+        $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit']),
+        $this->content()->get('bing_result_cache_time', $this->_defaults['bing_result_cache_time'])
       );
     }
     return $this->_searchApi;
@@ -157,6 +160,14 @@ class BoxRelated
       TRUE,
       1,
       2
+    );
+    $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
+      new \PapayaUiStringTranslated('Api Cache Time'),
+      'bing_result_cache_time',
+      $this->_defaults['bing_result_cache_time'],
+      FALSE,
+      NULL,
+      10
     );
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Search Term')

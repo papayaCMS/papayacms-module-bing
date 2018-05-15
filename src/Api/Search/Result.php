@@ -6,15 +6,21 @@ class Result implements \IteratorAggregate, \Countable {
 
   private $_response;
   private $_pages;
+  private $_fromCache;
 
-  public function __construct($response) {
+  public function __construct($response, $fromCache = FALSE) {
     $this->_response = $response;
+    $this->_fromCache = (bool)$fromCache;
   }
 
   public function getEstimatedMatches() {
     return isset($this->_response['webPages']['totalEstimatedMatches'])
       ? (int)$this->_response['webPages']['totalEstimatedMatches']
       : 0;
+  }
+
+  public function isFromCache() {
+    return $this->_fromCache;
   }
 
   public function getQuery() {
