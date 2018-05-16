@@ -11,9 +11,15 @@ if (
   is_file(PAPAYA_DOCUMENT_ROOT.$requestPathOriginal)
 ) {
   return FALSE;
-} elseif (file_exists(PAPAYA_DOCUMENT_ROOT.$requestedPath)) {
+}
+
+if (
+  file_exists(PAPAYA_DOCUMENT_ROOT.$requestedPath)
+) {
   if (is_file(PAPAYA_DOCUMENT_ROOT.$requestedPath)) {
-    header('Location: ' . $requestedPath);
+    header('Location: '.$requestedPath);
+  } elseif (is_dir(PAPAYA_DOCUMENT_ROOT.$requestedPath) && substr($requestedPath, -1) !== '/') {
+    header('Location: '.$requestedPath.'/');
   }
   chdir(PAPAYA_DOCUMENT_ROOT.$requestedPath);
   include 'index.php';
