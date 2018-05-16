@@ -29,11 +29,11 @@ class Search {
   /**
    * @param string $searchFor
    * @param int $pageIndex
-   * @return Search\Error|Search\Result
+   * @return Search\Message|Search\Result
    */
   public function fetch($searchFor, $pageIndex = 1) {
     if ('' === trim($searchFor)) {
-      return new Search\Error\EmptyQuery();
+      return new Search\Message\EmptyQuery();
     }
     if ('' !== trim($this->_identifier)) {
 
@@ -81,7 +81,7 @@ class Search {
       }
 
     }
-    return new Search\Error\TechnicalError();
+    return new Search\Message\TechnicalError();
   }
 
 }

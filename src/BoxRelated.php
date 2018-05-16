@@ -67,7 +67,7 @@ class BoxRelated
         $urlNode->appendElement('title', [], $url['title']);
         $urlNode->appendElement('snippet', [], $url['snippet']);
       }
-    } elseif ($searchResult instanceof Api\Search\Error) {
+    } elseif ($searchResult instanceof Api\Search\Message) {
       $searchNode->append($searchResult);
     }
   }

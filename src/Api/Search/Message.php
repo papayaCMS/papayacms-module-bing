@@ -2,7 +2,7 @@
 
 namespace Papaya\Module\Bing\Api\Search;
 
-class Error implements \PapayaXmlAppendable {
+abstract class Message implements \PapayaXmlAppendable {
 
   const SEVERITY_INFO = 'info';
   const SEVERITY_WARNING = 'warning';

@@ -1,10 +1,10 @@
 <?php
 
-namespace Papaya\Module\Bing\Api\Search\Error;
+namespace Papaya\Module\Bing\Api\Search\Message;
 
-use Papaya\Module\Bing\Api\Search\Error;
+use Papaya\Module\Bing\Api\Search\Message;
 
-class EmptyQuery extends Error {
+class EmptyQuery extends Message {
 
   const IDENTIFIER = 'EmptyQuery';
 

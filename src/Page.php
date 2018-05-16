@@ -25,11 +25,12 @@ class Page
    */
   private $_searchApi;
 
-  private $_defaults = [
+  private static $_defaults = [
     'bing_result_limit' => 10,
     'search_term_parameter' => 'q',
     'bing_result_cache_time' => 0,
     'message_empty_query' => 'Nothing to search for.',
+    'message_altered_query' => 'Corrected search query.',
     'message_empty_result' => 'Nothing found.',
     'message_technical_error' => 'Technical error. Can not search.'
   ];
@@ -68,26 +69,16 @@ class Page
       $filters->applyTo($this->content()->get('text', ''))
     );
 
-    $searchParameter = $this->content()->get('search_term_parameter', $this->_defaults['search_term_parameter']);
+    $searchParameter = $this->content()->get('search_term_parameter', self::$_defaults['search_term_parameter']);
     $searchFor = $this->parameters()->get($searchParameter, '');
     $pageIndex = max(1, $this->parameters()->get('q_page', 1));
-    $pageCount = $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit']);
+    $pageCount = $this->content()->get('bing_result_limit', self::$_defaults['bing_result_limit']);
     $searchResult = $this->searchApi()->fetch($searchFor, $pageIndex);
     $searchNode = $parent->appendElement('search');
     if ($searchResult instanceof Api\Search\Result) {
       $searchNode->setAttribute('term', $searchResult->getQuery());
-      if (count($searchResult) < 1) {
-         $searchNode
-           ->appendElement(
-            'message',
-            array(
-              'severity' => Api\Search\Error::SEVERITY_INFO,
-              'identifier' => 'EmptyResult'
-            )
-          )
-          ->appendXml(
-            $this->content()->get('message_empty_result', $this->_defaults['message_empty_result'])
-          );
+      foreach ($searchResult->getMessages() as $message) {
+        $this->appendMessageTo($searchNode, $message);
       }
       $searchNode->setAttribute('cached', $searchResult->isFromCache() ? 'true' : 'false');
       $urlsNode = $searchNode->appendElement('urls');
@@ -103,24 +94,30 @@ class Page
       $paging = new \PapayaUiPagingCount('q_page', $pageIndex, $searchResult->getEstimatedMatches());
       $paging->reference()->setParameters(array($searchParameter => $searchFor));
       $searchNode->append($paging);
-    } elseif ($searchResult instanceof Api\Search\Error) {
-      /**
-       * @var \PapayaXMLElement $messageNode
-       */
-      $messageNode = $searchNode->append($searchResult);
-      switch ($searchResult->getIdentifier()) {
-      case Api\Search\Error\EmptyQuery::IDENTIFIER :
-        $messageNode->appendXml(
-          $this->content()->get('message_empty_query', $this->_defaults['message_empty_query'])
-        );
-      case Api\Search\Error\TechnicalError::IDENTIFIER :
-        $messageNode->appendXml(
-          $this->content()->get('message_technical_error', $this->_defaults['message_technical_error'])
-        );
-      }
+    } elseif ($searchResult instanceof Api\Search\Message) {
+      $this->appendMessageTo($searchNode, $searchResult);
     }
 
     $parent->append($filters);
+  }
+
+  private function appendMessageTo(\PapayaXmlElement $parent, Api\Search\Message $message) {
+    $identifiers = array(
+      Api\Search\Message\EmptyQuery::IDENTIFIER => 'message_empty_query',
+      Api\Search\Message\AlteredQuery::IDENTIFIER => 'message_altered_query',
+      Api\Search\Message\EmptyResult::IDENTIFIER => 'message_empty_result',
+      Api\Search\Message\TechnicalError::IDENTIFIER => 'message_technical_error'
+    );
+    /**
+     * @var \PapayaXMLElement $messageNode
+     */
+    $messageNode = $parent->append($message);
+    if (isset($identifiers[$message->getIdentifier()])) {
+      $contentField = $identifiers[$message->getIdentifier()];
+      $messageNode->appendXml(
+        $this->content()->get($contentField, self::$_defaults[$contentField])
+      );
+    }
   }
 
   /**
@@ -135,8 +132,8 @@ class Page
       $api = $this->papaya()->plugins->get(self::API_GUID, $this);
       $this->_searchApi = $api->createSearchApi(
         $this->content()->get('bing_configuration_id', ''),
-        $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit']),
-        $this->content()->get('bing_result_cache_time', $this->_defaults['bing_result_cache_time'])
+        $this->content()->get('bing_result_limit', self::$_defaults['bing_result_limit']),
+        $this->content()->get('bing_result_cache_time', self::$_defaults['bing_result_cache_time'])
       );
     }
     return $this->_searchApi;
@@ -162,7 +159,7 @@ class Page
       new \PapayaUiStringTranslated('Search term parameter'),
       'search_term_parameter',
       20,
-      $this->_defaults['search_term_parameter']
+      self::$_defaults['search_term_parameter']
     );
     $dialog->fields[] = new \PapayaUiDialogFieldInput(
       new \PapayaUiStringTranslated('Bing configuration id'),
@@ -171,7 +168,7 @@ class Page
     $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
       new \PapayaUiStringTranslated('Items per page'),
       'bing_result_limit',
-      $this->_defaults['bing_result_limit'],
+      self::$_defaults['bing_result_limit'],
       TRUE,
       2,
       3
@@ -179,7 +176,7 @@ class Page
     $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
       new \PapayaUiStringTranslated('Api Cache Time'),
       'bing_result_cache_time',
-      $this->_defaults['bing_result_cache_time'],
+      self::$_defaults['bing_result_cache_time'],
       FALSE,
       NULL,
       10
@@ -216,7 +213,15 @@ class Page
       new \PapayaUiStringTranslated('Empty Query'),
       'message_empty_query',
       5,
-      $this->_defaults['message_empty_query'],
+      self::$_defaults['message_empty_query'],
+      new \PapayaFilterXml(),
+      \PapayaUiDialogFieldTextareaRichtext::RTE_SIMPLE
+    );
+    $dialog->fields[] = $field = new \PapayaUiDialogFieldTextareaRichtext(
+      new \PapayaUiStringTranslated('Altered Query'),
+      'message_altered_query',
+      5,
+      self::$_defaults['message_altered_query'],
       new \PapayaFilterXml(),
       \PapayaUiDialogFieldTextareaRichtext::RTE_SIMPLE
     );
@@ -224,7 +229,7 @@ class Page
       new \PapayaUiStringTranslated('Empty Result'),
       'message_empty_result',
       5,
-      $this->_defaults['message_empty_result'],
+      self::$_defaults['message_empty_result'],
       new \PapayaFilterXml(),
       \PapayaUiDialogFieldTextareaRichtext::RTE_SIMPLE
     );
@@ -232,7 +237,7 @@ class Page
       new \PapayaUiStringTranslated('Technical Error'),
       'message_technical_error',
       5,
-      $this->_defaults['message_technical_error'],
+      self::$_defaults['message_technical_error'],
       new \PapayaFilterXml(),
       \PapayaUiDialogFieldTextareaRichtext::RTE_SIMPLE
     );
