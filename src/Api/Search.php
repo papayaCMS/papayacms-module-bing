@@ -29,56 +29,59 @@ class Search {
   /**
    * @param string $searchFor
    * @param int $pageIndex
-   * @return Search\Error\EmptyQuery|Search\Result
+   * @return Search\Error|Search\Result
    */
   public function fetch($searchFor, $pageIndex = 1) {
     if ('' === trim($searchFor)) {
       return new Search\Error\EmptyQuery();
     }
+    if ('' !== trim($this->_identifier)) {
 
-    $offset =  $pageIndex * $this->_limit - $this->_limit;
-    $url = sprintf(
-      '%s?q=%s&customconfig=%s&count=%d&offset=%d',
-      $this->_endPoint,
-      urlencode($searchFor),
-      urlencode($this->_identifier),
-      $this->_limit,
-      $offset
-    );
-
-    $response = NULL;
-    $cache = NULL;
-    $hasCache = $this->_expires > 0 && ($cache = $this->cache()) && $cache->verify(TRUE);
-    $isCached = FALSE;
-    if (
-      $hasCache &&
-      ($response = $cache->read('BING_CUSTOM_SEARCH', $searchFor, $url, $this->_expires))
-    ) {
-      $isCached = TRUE;
-    } else {
-      $options = array(
-      'http' => array(
-        'method' => 'GET',
-        'header' => 'Ocp-Apim-Subscription-Key: '.$this->_key."\r\n"
-      )
+      $offset =  $pageIndex * $this->_limit - $this->_limit;
+      $url = sprintf(
+        '%s?q=%s&customconfig=%s&count=%d&offset=%d',
+        $this->_endPoint,
+        urlencode($searchFor),
+        urlencode($this->_identifier),
+        $this->_limit,
+        $offset
       );
-      $context = stream_context_create($options);
-      $response = file_get_contents($url, false, $context);
-    }
-    if ($response) {
-      $result = json_decode($response, JSON_OBJECT_AS_ARRAY);
-      $type = isset($result['_type']) ? $result['_type'] : '';
-      switch ($type) {
-      case 'SearchResponse':
-        if ($hasCache) {
-          $cache->write(
-            'BING_CUSTOM_SEARCH', $searchFor, $url, $response, $this->_expires
-          );
-        }
-        return new Search\Result($result, $isCached);
+
+      $response = NULL;
+      $cache = NULL;
+      $hasCache = $this->_expires > 0 && ($cache = $this->cache()) && $cache->verify(TRUE);
+      $isCached = FALSE;
+      if (
+        $hasCache &&
+        ($response = $cache->read('BING_CUSTOM_SEARCH', $searchFor, $url, $this->_expires))
+      ) {
+        $isCached = TRUE;
+      } else {
+        $options = array(
+        'http' => array(
+          'method' => 'GET',
+          'header' => 'Ocp-Apim-Subscription-Key: '.$this->_key."\r\n"
+        )
+        );
+        $context = stream_context_create($options);
+        $response = file_get_contents($url, false, $context);
       }
+      if ($response) {
+        $result = json_decode($response, JSON_OBJECT_AS_ARRAY);
+        $type = isset($result['_type']) ? $result['_type'] : '';
+        switch ($type) {
+        case 'SearchResponse':
+          if ($hasCache) {
+            $cache->write(
+              'BING_CUSTOM_SEARCH', $searchFor, $url, $response, $this->_expires
+            );
+          }
+          return new Search\Result($result, $isCached);
+        }
+      }
+
     }
-    return NULL;
+    return new Search\Error\TechnicalError();
   }
 
 }

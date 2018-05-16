@@ -18,7 +18,7 @@ class Error implements \PapayaXmlAppendable {
 
   public function appendTo(\PapayaXmlElement $parent) {
     return $parent->appendElement(
-      'error',
+      'message',
       array(
         'severity' => $this->getSeverity(),
         'identifier' => $this->getIdentifier()

@@ -42,9 +42,8 @@ class Result implements \IteratorAggregate, \Countable {
           ];
         }
       }
-      return $this->_pages;
     }
-
+    return $this->_pages;
   }
 
   public function getIterator() {

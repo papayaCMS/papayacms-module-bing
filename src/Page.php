@@ -28,7 +28,10 @@ class Page
   private $_defaults = [
     'bing_result_limit' => 10,
     'search_term_parameter' => 'q',
-    'bing_result_cache_time' => 0
+    'bing_result_cache_time' => 0,
+    'message_empty_query' => 'Nothing to search for.',
+    'message_empty_result' => 'Nothing found.',
+    'message_technical_error' => 'Technical error. Can not search.'
   ];
 
   public function __construct($page) {
@@ -73,6 +76,19 @@ class Page
     $searchNode = $parent->appendElement('search');
     if ($searchResult instanceof Api\Search\Result) {
       $searchNode->setAttribute('term', $searchResult->getQuery());
+      if (count($searchResult) < 1) {
+         $searchNode
+           ->appendElement(
+            'message',
+            array(
+              'severity' => Api\Search\Error::SEVERITY_INFO,
+              'identifier' => 'EmptyResult'
+            )
+          )
+          ->appendXml(
+            $this->content()->get('message_empty_result', $this->_defaults['message_empty_result'])
+          );
+      }
       $searchNode->setAttribute('cached', $searchResult->isFromCache() ? 'true' : 'false');
       $urlsNode = $searchNode->appendElement('urls');
       $urlsNode->setAttribute('estimated-total', $searchResult->getEstimatedMatches());
@@ -87,6 +103,21 @@ class Page
       $paging = new \PapayaUiPagingCount('q_page', $pageIndex, $searchResult->getEstimatedMatches());
       $paging->reference()->setParameters(array($searchParameter => $searchFor));
       $searchNode->append($paging);
+    } elseif ($searchResult instanceof Api\Search\Error) {
+      /**
+       * @var \PapayaXMLElement $messageNode
+       */
+      $messageNode = $searchNode->append($searchResult);
+      switch ($searchResult->getIdentifier()) {
+      case Api\Search\Error\EmptyQuery::IDENTIFIER :
+        $messageNode->appendXml(
+          $this->content()->get('message_empty_query', $this->_defaults['message_empty_query'])
+        );
+      case Api\Search\Error\TechnicalError::IDENTIFIER :
+        $messageNode->appendXml(
+          $this->content()->get('message_technical_error', $this->_defaults['message_technical_error'])
+        );
+      }
     }
 
     $parent->append($filters);
@@ -125,8 +156,8 @@ class Page
   public function createEditor(
     \PapayaPluginEditableContent $content
   ) {
-    $editor = new \PapayaAdministrationPluginEditorDialog($content);
-    $dialog = $editor->dialog();
+    $general = new \PapayaAdministrationPluginEditorDialog($content);
+    $dialog = $general->dialog();
     $dialog->fields[] = new \PapayaUiDialogFieldInput(
       new \PapayaUiStringTranslated('Search term parameter'),
       'search_term_parameter',
@@ -177,8 +208,49 @@ class Page
       '',
       new \PapayaFilterXml()
     );
+
+    $messages = new \PapayaAdministrationPluginEditorDialog($content);
+    $dialog = $messages->dialog();
+
+    $dialog->fields[] = $field = new \PapayaUiDialogFieldTextareaRichtext(
+      new \PapayaUiStringTranslated('Empty Query'),
+      'message_empty_query',
+      5,
+      $this->_defaults['message_empty_query'],
+      new \PapayaFilterXml(),
+      \PapayaUiDialogFieldTextareaRichtext::RTE_SIMPLE
+    );
+    $dialog->fields[] = $field = new \PapayaUiDialogFieldTextareaRichtext(
+      new \PapayaUiStringTranslated('Empty Result'),
+      'message_empty_result',
+      5,
+      $this->_defaults['message_empty_result'],
+      new \PapayaFilterXml(),
+      \PapayaUiDialogFieldTextareaRichtext::RTE_SIMPLE
+    );
+    $dialog->fields[] = $field = new \PapayaUiDialogFieldTextareaRichtext(
+      new \PapayaUiStringTranslated('Technical Error'),
+      'message_technical_error',
+      5,
+      $this->_defaults['message_technical_error'],
+      new \PapayaFilterXml(),
+      \PapayaUiDialogFieldTextareaRichtext::RTE_SIMPLE
+    );
+
+    $editor = new \PapayaAdministrationPluginEditorGroup($content, 'tt/editor-index');
+    $editor->add(
+      $general,
+      new \PapayaUiStringTranslated('General'),
+      'categories-content'
+    );
+    $editor->add(
+      $messages,
+      new \PapayaUiStringTranslated('Messages'),
+      'items-message'
+    );
     $editor->papaya($this->papaya());
     return $editor;
+
   }
 
   /**
