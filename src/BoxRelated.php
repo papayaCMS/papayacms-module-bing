@@ -23,7 +23,8 @@ class BoxRelated
   private $_searchApi;
 
   private $_defaults = [
-    'bing_result_limit' => 5,
+    'bing_result_limit' => 10,
+    'output_result_limit' => 5,
     'bing_result_cache_time' => 0,
     'search_term_parameter' => 'q',
     'search_term_source_xpath' => 'string(//topic/title)'
@@ -59,14 +60,32 @@ class BoxRelated
       $searchNode->setAttribute('term', $searchResult->getQuery());
       $searchNode->setAttribute('cached', $searchResult->isFromCache() ? 'true' : 'false');
       $urlsNode = $searchNode->appendElement('urls');
-      foreach ($searchResult as $url) {
+      foreach ($this->filterUrls($searchResult) as $url) {
         $urlNode = $urlsNode->appendElement('url');
         $urlNode->setAttribute('href', $url['url']);
         $urlNode->setAttribute('fixed-position', $url['fixed_position'] ? 'true' : 'false');
         $urlNode->appendElement('title', [], $url['title']);
         $urlNode->appendElement('snippet', [], $url['snippet']);
       }
+    } elseif ($searchResult instanceof Api\Search\Error) {
+      $searchNode->append($searchResult);
     }
+  }
+
+  private function filterUrls($searchResult) {
+    $currentUrl = clone $this->papaya()->request->getUrl();
+    $currentUrl->setQuery('');
+    $currentHref = $currentUrl->getUrl();
+    return new \LimitIterator(
+      new \PapayaIteratorFilterCallback(
+        $searchResult,
+        function($url) use ($currentHref) {
+          return $url['url'] !== $currentHref && FALSE === strpos($url['url'], $currentHref.'?');
+        }
+      ),
+      0,
+      $this->content()->get('output_result_limit', $this->_defaults['output_result_limit'])
+    );
   }
 
   private function getSearchFor() {
@@ -81,7 +100,6 @@ class BoxRelated
     case self::MODE_PAGE_METADATA :
       $metaData = $this->papayaBootstrap()->topic->loadMetaData();
       $keywords = \preg_split('(\s*,\s*)', $metaData['meta_keywords']);
-      array_unshift($keywords, $metaData['meta_title']);
       array_unshift($keywords, $metaData['meta_title']);
       $keywords = array_unique(
         array_filter(
@@ -154,7 +172,15 @@ class BoxRelated
       'bing_configuration_id'
     );
     $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
-      new \PapayaUiStringTranslated('Items limit'),
+      new \PapayaUiStringTranslated('Api Cache Time'),
+      'bing_result_cache_time',
+      $this->_defaults['bing_result_cache_time'],
+      FALSE,
+      NULL,
+      10
+    );
+    $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
+      new \PapayaUiStringTranslated('Items fetch limit'),
       'bing_result_limit',
       $this->_defaults['bing_result_limit'],
       TRUE,
@@ -162,12 +188,12 @@ class BoxRelated
       2
     );
     $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
-      new \PapayaUiStringTranslated('Api Cache Time'),
-      'bing_result_cache_time',
-      $this->_defaults['bing_result_cache_time'],
-      FALSE,
-      NULL,
-      10
+      new \PapayaUiStringTranslated('Items output limit'),
+      'output_result_limit',
+      $this->_defaults['output_result_limit'],
+      TRUE,
+      1,
+      2
     );
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Search Term')
