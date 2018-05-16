@@ -29,6 +29,7 @@ class Page
     'bing_result_limit' => 10,
     'search_term_parameter' => 'q',
     'bing_result_cache_time' => 0,
+    'result_append_teasers' => FALSE,
     'message_empty_query' => 'Nothing to search for.',
     'message_altered_query' => 'Corrected search query.',
     'message_empty_result' => 'Nothing found.',
@@ -72,7 +73,7 @@ class Page
     $searchParameter = $this->content()->get('search_term_parameter', self::$_defaults['search_term_parameter']);
     $searchFor = $this->parameters()->get($searchParameter, '');
     $pageIndex = max(1, $this->parameters()->get('q_page', 1));
-    $pageCount = $this->content()->get('bing_result_limit', self::$_defaults['bing_result_limit']);
+
     $searchResult = $this->searchApi()->fetch($searchFor, $pageIndex);
     $searchNode = $parent->appendElement('search');
     if ($searchResult instanceof Api\Search\Result) {
@@ -83,13 +84,21 @@ class Page
       $searchNode->setAttribute('cached', $searchResult->isFromCache() ? 'true' : 'false');
       $urlsNode = $searchNode->appendElement('urls');
       $urlsNode->setAttribute('estimated-total', $searchResult->getEstimatedMatches());
-      $urlsNode->setAttribute('offset', ($pageIndex - 1) * $pageCount);
+
+      $addTeasers = $this->content()->get('result_append_teasers', self::$_defaults['result_append_teasers']);
       foreach ($searchResult as $url) {
         $urlNode = $urlsNode->appendElement('url');
         $urlNode->setAttribute('href', $url['url']);
         $urlNode->setAttribute('fixed-position', $url['fixed_position'] ? 'true' : 'false');
         $urlNode->appendElement('title', [], $url['title']);
         $urlNode->appendElement('snippet', [], $url['snippet']);
+        if ($addTeasers && ($teaser = $this->createTeaser($url))) {
+          /** @var \PapayaUiContentPage $page */
+          $page = $teaser['page'];
+          $page->appendQuoteTo(
+            $urlNode, array('query_string' => $teaser['query_string'])
+          );
+        }
       }
       $paging = new \PapayaUiPagingCount('q_page', $pageIndex, $searchResult->getEstimatedMatches());
       $paging->reference()->setParameters(array($searchParameter => $searchFor));
@@ -99,6 +108,22 @@ class Page
     }
 
     $parent->append($filters);
+  }
+
+  private function createTeaser($url) {
+    $request = new \PapayaRequest();
+    $request->load(new \PapayaUrl($url['url']));
+    if (
+      $request->pageId > 0
+    ) {
+      return array(
+        'page' => new \PapayaUiContentPage(
+          $request->pageId, $request->languageId, TRUE
+        ),
+        'query_string' => $request->url->getQuery(),
+      );
+    }
+    return NULL;
   }
 
   private function appendMessageTo(\PapayaXmlElement $parent, Api\Search\Message $message) {
@@ -155,6 +180,11 @@ class Page
   ) {
     $general = new \PapayaAdministrationPluginEditorDialog($content);
     $dialog = $general->dialog();
+    $dialog->fields[] = new \PapayaUiDialogFieldInputCheckbox(
+      new \PapayaUiStringTranslated('Add page teasers'),
+      'result_append_teasers',
+      self::$_defaults['result_append_teasers']
+    );
     $dialog->fields[] = new \PapayaUiDialogFieldInput(
       new \PapayaUiStringTranslated('Search term parameter'),
       'search_term_parameter',
