@@ -31,7 +31,7 @@ class Result implements \IteratorAggregate, \Countable {
         );
       }
       if (count($this) < 1) {
-        $this->_messages[] = new Message\EmptyQuery();
+        $this->_messages[] = new Message\EmptyResult();
       }
     }
     return $this->_messages;
