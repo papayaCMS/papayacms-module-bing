@@ -91,8 +91,8 @@ class Page
         $urlNode = $urlsNode->appendElement('url');
         $urlNode->setAttribute('href', $url['url']);
         $urlNode->setAttribute('fixed-position', $url['fixed_position'] ? 'true' : 'false');
-        $urlNode->appendElement('title', [], $url['title']);
-        $urlNode->appendElement('snippet', [], $url['snippet']);
+        $urlNode->appendElement('title')->append(new Api\Search\DecoratedText($url['title']));
+        $urlNode->appendElement('snippet')->append(new Api\Search\DecoratedText($url['snippet']));
         if ($addTeasers && ($teaser = $this->createTeaser($url))) {
           /** @var \PapayaUiContentPage $page */
           $page = $teaser['page'];

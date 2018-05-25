@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "2c5e65b2227aba339f0a153fdcf5c9b8",
+    "content-hash": "62bf448c805f927e5f358262e93221e6",
     "packages": [
         {
             "name": "papaya/cms-core",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/papayaCMS/papayacms-core.git",
-                "reference": "b5253ce995569ee8609b45d405e046570a103be3"
+                "reference": "a50be1bd9414d43a5a38592cbf55169d9eb701c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/papayaCMS/papayacms-core/zipball/b5253ce995569ee8609b45d405e046570a103be3",
-                "reference": "b5253ce995569ee8609b45d405e046570a103be3",
+                "url": "https://api.github.com/repos/papayaCMS/papayacms-core/zipball/a50be1bd9414d43a5a38592cbf55169d9eb701c4",
+                "reference": "a50be1bd9414d43a5a38592cbf55169d9eb701c4",
                 "shasum": ""
             },
             "require": {
@@ -46,7 +46,7 @@
             ],
             "description": "papaya CMS core framework",
             "homepage": "http://www.papaya-cms.com/",
-            "time": "2018-05-16T14:14:48+00:00"
+            "time": "2018-05-17T15:36:13+00:00"
         }
     ],
     "packages-dev": [
@@ -216,6 +216,8 @@
     },
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "php": ">=7.0"
+    },
     "platform-dev": []
 }

@@ -5,6 +5,7 @@
     "document-root" : "htdocs/"
   },
   "require": {
+    "php": ">=7.0",
     "papaya/cms-core": "dev-master"
   },
   "require-dev": {
