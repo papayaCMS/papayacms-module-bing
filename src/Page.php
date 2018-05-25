@@ -207,7 +207,7 @@ class Page
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Result')
     );
-    $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
+    $group->fields[] = new \PapayaUiDialogFieldInputNumber(
       new \PapayaUiStringTranslated('Items per page'),
       'bing_result_limit',
       self::$_defaults['bing_result_limit'],
@@ -215,13 +215,13 @@ class Page
       2,
       3
     );
-    $dialog->fields[] = new \PapayaUiDialogFieldInputCheckbox(
+    $group->fields[] = new \PapayaUiDialogFieldInputCheckbox(
       new \PapayaUiStringTranslated('Add page teasers'),
       'result_append_teasers',
       self::$_defaults['result_append_teasers']
     );
-    $dialog->fields[] = new \PapayaUiDialogFieldInputCheckbox(
-      new \PapayaUiStringTranslated('Highlight query terms'),
+    $group->fields[] = new \PapayaUiDialogFieldInputCheckbox(
+      new \PapayaUiStringTranslated('Add text decorations'),
       'result_decorate_text',
       self::$_defaults['result_decorate_text']
     );
