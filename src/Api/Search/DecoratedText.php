@@ -35,10 +35,31 @@ class DecoratedText implements \PapayaXmlAppendable {
     "\u{E016}" => array(self::SUBSCRIPT, "\u{E017}"),
     "\u{E018}" => array(self::SUPERSCRIPT, "\u{E019}")
   );
+  private static $_replacedMarkers = FALSE;
 
 
   public function __construct($text) {
     $this->_text = $text;
+    if (!self::$_replacedMarkers && PHP_VERSION_ID < 70000) {
+      $markers = [];
+      foreach (self::$_markers as $begin => $marker) {
+        if (isset($marker[1])) {
+          $marker[1] = $this->codePointsToUtf8($marker[1]);
+        }
+        $markers[$this->codePointsToUtf8($begin)] = $marker;
+      }
+      self::$_markers = $markers;
+    }
+  }
+
+  private function codePointsToUtf8($text) {
+    return preg_replace_callback(
+      '(\\\\u\\{([^}]+)\\})',
+      function($match) {
+        return html_entity_decode('&#x'.$match[1].';');
+      },
+      $text
+    );
   }
 
   public function appendTo(PapayaXmlElement $parent) {

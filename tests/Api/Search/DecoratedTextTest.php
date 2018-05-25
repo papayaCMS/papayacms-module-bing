@@ -33,6 +33,10 @@ class DecoratedTextTest extends \PapayaTestCase {
       array(
         '<snippet>before <marker type="linebreak"/> after</snippet>',
         "before \u{E004} after"
+      ),
+      array(
+        '<snippet>zum Beispiel als leise <marker type="query_term">Musik</marker>, lautes Hupen</snippet>',
+        'zum Beispiel als leise Musik, lautes Hupen'
       )
     );
   }
