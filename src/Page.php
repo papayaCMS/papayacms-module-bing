@@ -30,6 +30,7 @@ class Page
     'search_term_parameter' => 'q',
     'bing_result_cache_time' => 0,
     'result_append_teasers' => FALSE,
+    'result_decorate_text' => TRUE,
     'message_empty_query' => 'Nothing to search for.',
     'message_altered_query' => 'Corrected search query.',
     'message_empty_result' => 'Nothing found.',
@@ -164,6 +165,7 @@ class Page
         $this->content()->get('bing_result_limit', self::$_defaults['bing_result_limit']),
         $this->content()->get('bing_result_cache_time', self::$_defaults['bing_result_cache_time'])
       );
+      $searchApi->enableTextDecorations();
     }
     return $this->_searchApi;
   }
@@ -184,11 +186,6 @@ class Page
   ) {
     $general = new \PapayaAdministrationPluginEditorDialog($content);
     $dialog = $general->dialog();
-    $dialog->fields[] = new \PapayaUiDialogFieldInputCheckbox(
-      new \PapayaUiStringTranslated('Add page teasers'),
-      'result_append_teasers',
-      self::$_defaults['result_append_teasers']
-    );
     $dialog->fields[] = new \PapayaUiDialogFieldInput(
       new \PapayaUiStringTranslated('Search term parameter'),
       'search_term_parameter',
@@ -200,6 +197,17 @@ class Page
       'bing_configuration_id'
     );
     $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
+      new \PapayaUiStringTranslated('Api Cache Time'),
+      'bing_result_cache_time',
+      self::$_defaults['bing_result_cache_time'],
+      FALSE,
+      NULL,
+      10
+    );
+    $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
+      new \PapayaUiStringTranslated('Result')
+    );
+    $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
       new \PapayaUiStringTranslated('Items per page'),
       'bing_result_limit',
       self::$_defaults['bing_result_limit'],
@@ -207,13 +215,15 @@ class Page
       2,
       3
     );
-    $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
-      new \PapayaUiStringTranslated('Api Cache Time'),
-      'bing_result_cache_time',
-      self::$_defaults['bing_result_cache_time'],
-      FALSE,
-      NULL,
-      10
+    $dialog->fields[] = new \PapayaUiDialogFieldInputCheckbox(
+      new \PapayaUiStringTranslated('Add page teasers'),
+      'result_append_teasers',
+      self::$_defaults['result_append_teasers']
+    );
+    $dialog->fields[] = new \PapayaUiDialogFieldInputCheckbox(
+      new \PapayaUiStringTranslated('Highlight query terms'),
+      'result_decorate_text',
+      self::$_defaults['result_decorate_text']
     );
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Texts')

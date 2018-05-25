@@ -10,6 +10,7 @@ class Search {
   private $_limit;
   private $_cache;
   private $_expires;
+  private $_textDecorations;
 
   public function __construct($endPoint, $key, $identifier, $limit = 10) {
     $this->_endPoint = $endPoint;
@@ -24,6 +25,14 @@ class Search {
       $this->_expires = (int)$expires;
     }
     return $this->_cache;
+  }
+
+  public function enableTextDecorations() {
+    $this->_textDecorations = TRUE;
+  }
+
+  public function disableTextDecorations() {
+    $this->_textDecorations = FALSE;
   }
 
   /**
