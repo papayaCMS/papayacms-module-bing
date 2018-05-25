@@ -101,7 +101,11 @@ class Page
         }
       }
       $paging = new \PapayaUiPagingCount('q_page', $pageIndex, $searchResult->getEstimatedMatches());
-      $paging->reference()->setParameters(array($searchParameter => $searchFor));
+      $paging->reference()->setParameters(
+        array(
+          $searchParameter => $searchResult->getQuery()
+        )
+      );
       $searchNode->append($paging);
     } elseif ($searchResult instanceof Api\Search\Message) {
       $this->appendMessageTo($searchNode, $searchResult);
