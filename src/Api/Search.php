@@ -48,12 +48,13 @@ class Search {
 
       $offset =  $pageIndex * $this->_limit - $this->_limit;
       $url = sprintf(
-        '%s?q=%s&customconfig=%s&count=%d&offset=%d',
+        '%s?q=%s&customconfig=%s&count=%d&offset=%d&textDecorations=%s',
         $this->_endPoint,
         urlencode($searchFor),
         urlencode($this->_identifier),
         $this->_limit,
-        $offset
+        $offset,
+        $this->_textDecorations ? 'true' : 'false'
       );
 
       $response = NULL;

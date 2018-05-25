@@ -165,7 +165,7 @@ class Page
         $this->content()->get('bing_result_limit', self::$_defaults['bing_result_limit']),
         $this->content()->get('bing_result_cache_time', self::$_defaults['bing_result_cache_time'])
       );
-      $searchApi->enableTextDecorations();
+      $this->_searchApi->enableTextDecorations();
     }
     return $this->_searchApi;
   }
