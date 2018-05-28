@@ -15,6 +15,7 @@ class BoxRelated
 
   const MODE_PAGE_TITLE = 'title';
   const MODE_PAGE_METADATA = 'metadata';
+  const MODE_PAGE_METADATA_KEYWORDS = 'keywords';
   const MODE_PAGE_XPATH = 'xpath';
 
   /**
@@ -89,8 +90,8 @@ class BoxRelated
   }
 
   private function getSearchFor() {
-    $searchFor = '';
-    switch ($this->content()->get('search_term_source_mode')) {
+    $mode = $this->content()->get('search_term_source_mode');
+    switch ($mode) {
     case self::MODE_PAGE_XPATH :
       $searchFor = $this->getSearchForFromPageDocument(
         $this->papayaBootstrap()->getPageDocument(),
@@ -98,9 +99,12 @@ class BoxRelated
       );
       break;
     case self::MODE_PAGE_METADATA :
+    case self::MODE_PAGE_METADATA_KEYWORDS :
       $metaData = $this->papayaBootstrap()->topic->loadMetaData();
       $keywords = \preg_split('(\s*,\s*)', $metaData['meta_keywords']);
-      array_unshift($keywords, $metaData['meta_title']);
+      if ($mode === self::MODE_PAGE_METADATA) {
+        array_unshift($keywords, $metaData['meta_title']);
+      }
       $keywords = array_unique(
         array_filter(
           $keywords,
@@ -203,6 +207,7 @@ class BoxRelated
       'search_term_source_mode',
       array(
         self::MODE_PAGE_TITLE => 'Page Title',
+        self::MODE_PAGE_METADATA_KEYWORDS => 'Page Keywords',
         self::MODE_PAGE_METADATA => 'Page Metadata',
         self::MODE_PAGE_XPATH => 'Xpath',
       )
