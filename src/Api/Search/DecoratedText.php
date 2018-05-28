@@ -81,7 +81,7 @@ class DecoratedText implements \PapayaXmlAppendable {
   private function replace(PapayaXmlElement $parent, $text) {
     $offset = 0;
     while ($next = $this->next($text, $offset)) {
-      $before = \substr($text, $offset, $next[1]);
+      $before = \substr($text, $offset, $next[1] - $offset);
       $parent->appendText($before);
       $offset = $next[1] + \strlen($next[0]);
       if (isset(self::$_markers[$next[0]])) {

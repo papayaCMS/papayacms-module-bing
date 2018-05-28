@@ -35,8 +35,8 @@ class DecoratedTextTest extends \PapayaTestCase {
         html_entity_decode('before &#xE004; after')
       ),
       array(
-        '<snippet>zum Beispiel als leise <marker type="query_term">Musik</marker>, lautes Hupen</snippet>',
-        'zum Beispiel als leise Musik, lautes Hupen'
+        '<snippet>Das &#xE4;u&#xDF;ere <marker type="query_term">Ohr</marker> beginnt mit der Ohrmuschel und endet beim <marker type="query_term">Trommelfell</marker>. ... Wenn doch einmal Wasser ins <marker type="query_term">Ohr</marker> ... Bei empfindlichen <marker type="query_term">Geh&#xF6;rg&#xE4;ngen</marker> nicht ...</snippet>',
+        'Das äußere Ohr beginnt mit der Ohrmuschel und endet beim Trommelfell. ... Wenn doch einmal Wasser ins Ohr ... Bei empfindlichen Gehörgängen nicht ...'
       )
     );
   }
