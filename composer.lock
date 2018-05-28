@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "62bf448c805f927e5f358262e93221e6",
+    "content-hash": "9bddf4ea689937f22d874c1fa1b9120b",
     "packages": [
         {
             "name": "papaya/cms-core",
@@ -217,7 +217,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=7.0"
+        "php": ">=5.6"
     },
     "platform-dev": []
 }

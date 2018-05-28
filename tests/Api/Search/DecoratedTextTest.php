@@ -24,15 +24,15 @@ class DecoratedTextTest extends \PapayaTestCase {
     return array(
       array(
         '<snippet>before <marker type="query_term">term</marker> after</snippet>',
-        "before \u{E000}term\u{E001} after"
+        html_entity_decode('before &#xE000;term&#xE001; after')
       ),
       array(
         '<snippet>before <marker type="address"><marker type="phone_number">+00 123 456789</marker></marker> after</snippet>',
-        "before \u{E007}\u{E005}+00 123 456789\u{E006}\u{E008} after"
+        html_entity_decode('before &#xE007;&#xE005;+00 123 456789&#xE006;&#xE008; after')
       ),
       array(
         '<snippet>before <marker type="linebreak"/> after</snippet>',
-        "before \u{E004} after"
+        html_entity_decode('before &#xE004; after')
       ),
       array(
         '<snippet>zum Beispiel als leise <marker type="query_term">Musik</marker>, lautes Hupen</snippet>',
