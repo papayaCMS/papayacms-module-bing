@@ -56,6 +56,13 @@ class Search {
         $offset,
         $this->_textDecorations ? 'true' : 'false'
       );
+      $cacheParameters = array(
+        $this->_identifier,
+        $searchFor,
+        $this->_limit,
+        $offset,
+        $this->_textDecorations ? 'true' : 'false'
+      );
 
       $response = NULL;
       $cache = NULL;
@@ -63,7 +70,7 @@ class Search {
       $isCached = FALSE;
       if (
         $hasCache &&
-        ($response = $cache->read('BING_CUSTOM_SEARCH', $searchFor, $url, $this->_expires))
+        ($response = $cache->read('BING_CUSTOM_SEARCH', $this->_identifier, $cacheParameters, $this->_expires))
       ) {
         $isCached = TRUE;
       } else {
@@ -83,7 +90,7 @@ class Search {
         case 'SearchResponse':
           if ($hasCache) {
             $cache->write(
-              'BING_CUSTOM_SEARCH', $searchFor, $url, $response, $this->_expires
+              'BING_CUSTOM_SEARCH', $this->_identifier, $cacheParameters, $response, $this->_expires
             );
           }
           return new Search\Result($result, $isCached);
