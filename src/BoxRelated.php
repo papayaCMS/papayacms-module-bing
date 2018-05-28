@@ -90,6 +90,7 @@ class BoxRelated
   }
 
   private function getSearchFor() {
+    $searchFor = '';
     $mode = $this->content()->get('search_term_source_mode');
     switch ($mode) {
     case self::MODE_PAGE_XPATH :
