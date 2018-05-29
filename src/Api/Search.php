@@ -75,10 +75,10 @@ class Search {
         $isCached = TRUE;
       } else {
         $options = array(
-        'http' => array(
-          'method' => 'GET',
-          'header' => 'Ocp-Apim-Subscription-Key: '.$this->_key."\r\n"
-        )
+          'http' => array(
+            'method' => 'GET',
+            'header' => 'Ocp-Apim-Subscription-Key: '.$this->_key."\r\n"
+          )
         );
         $context = stream_context_create($options);
         $response = file_get_contents($url, false, $context);
@@ -95,8 +95,21 @@ class Search {
           }
           return new Search\Result($result, $isCached);
         }
+      } elseif (
+        $hasCache &&
+        (
+          $response = $cache->read(
+            'BING_CUSTOM_SEARCH', $this->_identifier, $cacheParameters, $this->_expires + 100
+          )
+        )
+      ) {
+        $result = json_decode($response, JSON_OBJECT_AS_ARRAY);
+        $type = isset($result['_type']) ? $result['_type'] : '';
+        switch ($type) {
+        case 'SearchResponse':
+          return new Search\Result($result, TRUE);
+        }
       }
-
     }
     return new Search\Message\TechnicalError();
   }
