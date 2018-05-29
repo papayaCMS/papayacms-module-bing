@@ -23,4 +23,15 @@ class AlteredQuery extends Message {
     $messageNode->setAttribute('original-query', $this->_original);
     return $messageNode;
   }
+
+  public function getUserMessage() {
+    $values = array(
+      '{%ORIGINAL_QUERY%}' => $this->_original,
+      '{%ALTERED_QUERY%}' => $this->_altered,
+      // just bc
+      '{%SEARCHTERM%}' => $this->_original,
+      '{%CORRECTEDTERM%}' => $this->_altered
+    );
+    return strtr(parent::getUserMessage(), $values);
+  }
 }

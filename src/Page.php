@@ -141,13 +141,13 @@ class Page
     /**
      * @var \PapayaXMLElement $messageNode
      */
-    $messageNode = $parent->append($message);
     if (isset($identifiers[$message->getIdentifier()])) {
       $contentField = $identifiers[$message->getIdentifier()];
-      $messageNode->appendXml(
+      $message->setUserMessage(
         $this->content()->get($contentField, self::$_defaults[$contentField])
       );
     }
+    $parent->append($message);
   }
 
   /**
@@ -268,6 +268,11 @@ class Page
       self::$_defaults['message_altered_query'],
       new \PapayaFilterXml(),
       \PapayaUiDialogFieldTextareaRichtext::RTE_SIMPLE
+    );
+    $field->setHint(
+      new \PapayaUiStringTranslated(
+        'Supports placeholders: %s', array('{%ORIGINAL_QUERY%}, {%ALTERED_QUERY%}')
+      )
     );
     $dialog->fields[] = $field = new \PapayaUiDialogFieldTextareaRichtext(
       new \PapayaUiStringTranslated('Empty Result'),
