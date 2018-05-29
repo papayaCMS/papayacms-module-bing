@@ -76,12 +76,18 @@ class BoxRelated
   private function filterUrls($searchResult) {
     $currentUrl = clone $this->papaya()->request->getUrl();
     $currentUrl->setQuery('');
-    $currentHref = $currentUrl->getUrl();
+    $getPath = function($href) {
+      if (preg_match('(\w+://[^/]+/(?<path>[^?#]+))', $href, $match)) {
+        return $match['path'];
+      }
+      return $href;
+    };
+    $currentPath = $getPath($currentUrl->getUrl());
     return new \LimitIterator(
       new \PapayaIteratorFilterCallback(
         $searchResult,
-        function($url) use ($currentHref) {
-          return $url['url'] !== $currentHref && FALSE === strpos($url['url'], $currentHref.'?');
+        function($url) use ($currentPath, $getPath) {
+          return $getPath($url['url']) !== $currentPath;
         }
       ),
       0,
