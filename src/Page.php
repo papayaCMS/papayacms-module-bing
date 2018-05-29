@@ -85,6 +85,7 @@ class Page
       $searchNode->setAttribute('cached', $searchResult->isFromCache() ? 'true' : 'false');
       $urlsNode = $searchNode->appendElement('urls');
       $urlsNode->setAttribute('estimated-total', $searchResult->getEstimatedMatches());
+      $urlsNode->setAttribute('count', count($searchResult));
 
       $addTeasers = $this->content()->get('result_append_teasers', self::$_defaults['result_append_teasers']);
       foreach ($searchResult as $url) {

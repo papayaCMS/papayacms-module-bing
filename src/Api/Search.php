@@ -77,11 +77,12 @@ class Search {
         $options = array(
           'http' => array(
             'method' => 'GET',
-            'header' => 'Ocp-Apim-Subscription-Key: '.$this->_key."\r\n"
+            'header' => 'Ocp-Apim-Subscription-Key: '.$this->_key."\r\n",
+            'timeout ' => 3
           )
         );
         $context = stream_context_create($options);
-        $response = file_get_contents($url, false, $context);
+        $response = @file_get_contents($url, false, $context);
       }
       if ($response) {
         $result = json_decode($response, JSON_OBJECT_AS_ARRAY);
