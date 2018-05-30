@@ -22,8 +22,9 @@ class Api
   private $_cache;
 
   public function createOptionsEditor(\PapayaPluginEditableOptions $options) {
-    $editor = new \PapayaAdministrationPluginEditorDialog($options);
-    $dialog = $editor->dialog();
+    $configuration = new \PapayaAdministrationPluginEditorDialog($options);
+    $configuration->papaya($this->papaya());
+    $dialog = $configuration->dialog();
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       'Bing API'
     );
@@ -57,6 +58,65 @@ class Api
     $group->fields[] = $field = new \PapayaUiDialogFieldInput(
       new \PapayaUiStringTranslated('Memcache Servers'),
       'CACHE_MEMCACHE_SERVERS'
+    );
+
+    $cacheManagement = new \PapayaAdministrationPluginEditorDialog($options);
+    $cacheManagement->onExecute(
+      function() {
+        if ($cache = $this->createCacheService()) {
+          $deleted = $cache->delete('BING_CUSTOM_SEARCH');
+          if (TRUE === $deleted) {
+            $this->papaya()->messages->display(
+              \PapayaMessage::SEVERITY_INFO,
+              new \PapayaUiStringTranslated('Cache deleted.')
+            );
+          } elseif ($deleted > 0) {
+            $this->papaya()->messages->display(
+              \PapayaMessage::SEVERITY_INFO,
+              new \PapayaUiStringTranslated('%d cache item(s) deleted.', array($deleted))
+            );
+          } elseif ($deleted === 0) {
+            $this->papaya()->messages->display(
+              \PapayaMessage::SEVERITY_INFO,
+              new \PapayaUiStringTranslated('Cache is empty.')
+            );
+          } else {
+            $this->papaya()->messages->display(
+              \PapayaMessage::SEVERITY_ERROR,
+              new \PapayaUiStringTranslated('Cache delete failed.')
+            );
+          }
+        } else {
+          $this->papaya()->messages->display(
+            \PapayaMessage::SEVERITY_WARNING,
+            new \PapayaUiStringTranslated('No cache configured.')
+          );
+        }
+      }
+    );
+    $dialog = $cacheManagement->dialog();
+    $dialog->caption = new \PapayaUiStringTranslated('Confirmation');
+    $dialog->fields[] = new \PapayaUiDialogFieldInformation(
+      new \PapayaUiStringTranslated(
+        'Delete Cache?'
+      ),
+      'places-trash'
+    );
+    $dialog->options->topButtons = FALSE;
+    $dialog->buttons[0] = new \PapayaUiDialogButtonSubmit(
+      new \PapayaUiStringTranslated('Delete')
+    );
+
+    $editor = new \PapayaAdministrationPluginEditorGroup($options);
+    $editor->add(
+      $configuration,
+      new \PapayaUiStringTranslated('Settings'),
+      'items-option'
+    );
+    $editor->add(
+      $cacheManagement,
+      new \PapayaUiStringTranslated('Manage Cache'),
+      'actions-database-refresh'
     );
     $editor->papaya($this->papaya());
     return $editor;
