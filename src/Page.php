@@ -91,6 +91,7 @@ class Page
       foreach ($searchResult as $url) {
         $urlNode = $urlsNode->appendElement('url');
         $urlNode->setAttribute('href', $url['url']);
+        $urlNode->setAttribute('last-crawled', \PapayaUtilDate::timestampToString($url['last_crawled']));
         $urlNode->setAttribute('fixed-position', $url['fixed_position'] ? 'true' : 'false');
         $urlNode->appendElement('title')->append(new Api\Search\DecoratedText($url['title']));
         $urlNode->appendElement('snippet')->append(new Api\Search\DecoratedText($url['snippet']));

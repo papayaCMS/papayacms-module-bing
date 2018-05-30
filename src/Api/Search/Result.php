@@ -64,7 +64,8 @@ class Result implements \IteratorAggregate, \Countable {
             'url' => $page['url'],
             'title' => $page['name'],
             'snippet' => $page['snippet'],
-            'fixed_position' => $page['fixedPosition']
+            'fixed_position' => $page['fixedPosition'],
+            'last_crawled' => strtotime($page['dateLastCrawled'])
           ];
         }
       }
