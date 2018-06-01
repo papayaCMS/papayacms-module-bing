@@ -104,6 +104,9 @@ class Page
         }
       }
       $paging = new \PapayaUiPagingCount('q_page', $pageIndex, $searchResult->getEstimatedMatches());
+      $paging->setItemsPerPage(
+        $this->content()->get('bing_result_limit', self::$_defaults['bing_result_limit'])
+      );
       $paging->reference()->setParameters(
         array(
           $searchParameter => $searchResult->getQuery()
@@ -120,9 +123,7 @@ class Page
   private function createTeaser($url) {
     $request = new \PapayaRequest();
     $request->load(new \PapayaUrl($url['url']));
-    if (
-      $request->pageId > 0
-    ) {
+    if ($request->pageId > 0 && $request->languageId > 0) {
       return array(
         'page' => new \PapayaUiContentPage(
           $request->pageId, $request->languageId, TRUE
