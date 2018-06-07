@@ -23,15 +23,22 @@ class BoxRelated
    */
   private $_searchApi;
 
-  private $_defaults = [
+  private static $_defaults = [
     'bing_result_limit' => 10,
     'output_result_limit' => 5,
     'bing_result_cache_time' => 0,
     'search_term_parameter' => 'q',
-    'search_term_source_xpath' => 'string(//topic/title)'
+    'search_term_source_xpath' => 'string(//topic/title)',
+    'result_hide_current_url' => TRUE,
+    'result_hide_views' => FALSE
   ];
 
   private $_bootstrap;
+
+  /**
+   * @var \PapayaContentViews
+   */
+  private $_views;
 
 
   /**
@@ -48,7 +55,7 @@ class BoxRelated
     );
     $reference->getParameters()->set(
       $this->content()->get(
-        'search_term_parameter', $this->_defaults['search_term_parameter']
+        'search_term_parameter', self::$_defaults['search_term_parameter']
       ),
       $searchFor
     );
@@ -74,25 +81,58 @@ class BoxRelated
   }
 
   private function filterUrls($searchResult) {
-    $currentUrl = clone $this->papaya()->request->getUrl();
-    $currentUrl->setQuery('');
-    $getPath = function($href) {
-      if (preg_match('(\w+://[^/]+/(?<path>[^?#]+))', $href, $match)) {
-        return $match['path'];
-      }
-      return $href;
-    };
-    $currentPath = $getPath($currentUrl->getUrl());
-    return new \LimitIterator(
-      new \PapayaIteratorFilterCallback(
-        $searchResult,
-        function($url) use ($currentPath, $getPath) {
-          return $getPath($url['url']) !== $currentPath;
+    $filters = [];
+    if ($this->content()->get('result_hide_current_url', self::$_defaults['result_hide_current_url'])) {
+      $currentUrl = clone $this->papaya()->request->getUrl();
+      $currentUrl->setQuery('');
+      $getPath = function($href) {
+        if (preg_match('(\w+://[^/]+/(?<path>[^?#]+))', $href, $match)) {
+          return $match['path'];
         }
-      ),
-      0,
-      $this->content()->get('output_result_limit', $this->_defaults['output_result_limit'])
-    );
+        return $href;
+      };
+      $currentPath = $getPath($currentUrl->getUrl());
+      $filters[] = function($url) use ($currentPath, $getPath) {
+        return $getPath($url['url']) !== $currentPath;
+      };
+    }
+    if (
+      ($viewIds = $this->content()->get('result_filter_views', array())) &&
+      $this->content()->get('result_hide_views', self::$_defaults['result_hide_views'])
+    ) {
+      $filters[] = function($url) use ($viewIds) {
+        $request = new \PapayaRequest();
+        $request->load(new \PapayaUrl($url['url']));
+        if ($request->pageId > 0 && $request->languageId > 0) {
+          $page = new \PapayaUiContentPage(
+            $request->pageId, $request->languageId, TRUE
+          );
+          if (in_array($page->getPageViewId(), $viewIds, FALSE)) {
+            return FALSE;
+          }
+        }
+        return TRUE;
+      };
+    }
+
+    if (\count($filters) > 0) {
+      return new \LimitIterator(
+        new \PapayaIteratorFilterCallback(
+          $searchResult,
+          function ($url) use ($filters) {
+            foreach ($filters as $filter) {
+              if (!$filter($url)) {
+                return FALSE;
+              }
+            }
+            return TRUE;
+          }
+        ),
+        0,
+        $this->content()->get('output_result_limit', self::$_defaults['output_result_limit'])
+      );
+    }
+    return $searchResult;
   }
 
   private function getSearchFor() {
@@ -102,7 +142,7 @@ class BoxRelated
     case self::MODE_PAGE_XPATH :
       $searchFor = $this->getSearchForFromPageDocument(
         $this->papayaBootstrap()->getPageDocument(),
-        $this->content()->get('search_term_source_xpath', $this->_defaults['search_term_source_xpath'])
+        $this->content()->get('search_term_source_xpath', self::$_defaults['search_term_source_xpath'])
       );
       break;
     case self::MODE_PAGE_METADATA :
@@ -167,8 +207,8 @@ class BoxRelated
       $api = $this->papaya()->plugins->get(self::API_GUID, $this);
       $this->_searchApi = $api->createSearchApi(
         $this->content()->get('bing_configuration_id', ''),
-        $this->content()->get('bing_result_limit', $this->_defaults['bing_result_limit']),
-        $this->content()->get('bing_result_cache_time', $this->_defaults['bing_result_cache_time'])
+        $this->content()->get('bing_result_limit', self::$_defaults['bing_result_limit']),
+        $this->content()->get('bing_result_cache_time', self::$_defaults['bing_result_cache_time'])
       );
     }
     return $this->_searchApi;
@@ -185,7 +225,7 @@ class BoxRelated
     $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
       new \PapayaUiStringTranslated('Api Cache Time'),
       'bing_result_cache_time',
-      $this->_defaults['bing_result_cache_time'],
+      self::$_defaults['bing_result_cache_time'],
       FALSE,
       NULL,
       10
@@ -193,7 +233,7 @@ class BoxRelated
     $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
       new \PapayaUiStringTranslated('Items fetch limit'),
       'bing_result_limit',
-      $this->_defaults['bing_result_limit'],
+      self::$_defaults['bing_result_limit'],
       TRUE,
       1,
       2
@@ -201,7 +241,7 @@ class BoxRelated
     $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
       new \PapayaUiStringTranslated('Items output limit'),
       'output_result_limit',
-      $this->_defaults['output_result_limit'],
+      self::$_defaults['output_result_limit'],
       TRUE,
       1,
       2
@@ -224,7 +264,27 @@ class BoxRelated
       new \PapayaUiStringTranslated('Xpath expression'),
       'search_term_source_xpath',
       4000,
-      $this->_defaults['search_term_source_xpath']
+      self::$_defaults['search_term_source_xpath']
+    );
+    $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
+      new \PapayaUiStringTranslated('Filter')
+    );
+    $group->fields[] = new \PapayaUiDialogFieldInputCheckbox(
+      new \PapayaUiStringTranslated('Hide current URL'),
+      'result_hide_current_url',
+      self::$_defaults['result_hide_current_url']
+    );
+    $group->fields[] = new \PapayaUiDialogFieldInputCheckbox(
+      new \PapayaUiStringTranslated('Hide selected views'),
+      'result_hide_views',
+      self::$_defaults['result_hide_views']
+    );
+    $group->fields[] = $field = new \PapayaUiDialogFieldSelectCheckboxes(
+       new \PapayaUiStringTranslated('Named views'),
+       'result_filter_views',
+       new \PapayaIteratorArrayMapper(
+         $this->views(), 'title'
+       )
     );
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Link')
@@ -239,10 +299,27 @@ class BoxRelated
       new \PapayaUiStringTranslated('Parameter'),
       'search_term_parameter',
       400,
-      $this->_defaults['search_term_parameter']
+      self::$_defaults['search_term_parameter']
     );
     $field->setMandatory(TRUE);
     return $editor;
+  }
+
+  /**
+   * @param \PapayaContentViews|NULL $views
+   * @return \PapayaContentViews
+   */
+  public function views(\PapayaContentViews $views = NULL) {
+    if (NULL !== $views) {
+      $this->_views = $views;
+    } elseif (NULL === $this->_views) {
+      $this->_views = new \PapayaContentViews();
+      $this->_views->papaya($this->papaya());
+      $this->_views->activateLazyLoad(
+        array('notequal:name' => '')
+      );
+    }
+    return $this->_views;
   }
 
   /**
