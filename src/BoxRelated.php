@@ -29,8 +29,7 @@ class BoxRelated
     'bing_result_cache_time' => 0,
     'search_term_parameter' => 'q',
     'search_term_source_xpath' => 'string(//topic/title)',
-    'result_hide_current_url' => TRUE,
-    'result_hide_views' => FALSE
+    'result_hide_current_url' => TRUE
   ];
 
   private $_bootstrap;
@@ -96,10 +95,7 @@ class BoxRelated
         return $getPath($url['url']) !== $currentPath;
       };
     }
-    if (
-      ($viewIds = $this->content()->get('result_filter_views', array())) &&
-      $this->content()->get('result_hide_views', self::$_defaults['result_hide_views'])
-    ) {
+    if ($viewIds = $this->content()->get('result_filter_views', array())) {
       $filters[] = function($url) use ($viewIds) {
         $request = new \PapayaRequest();
         $request->load(new \PapayaUrl($url['url']));
@@ -274,17 +270,13 @@ class BoxRelated
       'result_hide_current_url',
       self::$_defaults['result_hide_current_url']
     );
-    $group->fields[] = new \PapayaUiDialogFieldInputCheckbox(
-      new \PapayaUiStringTranslated('Hide selected views'),
-      'result_hide_views',
-      self::$_defaults['result_hide_views']
-    );
     $group->fields[] = $field = new \PapayaUiDialogFieldSelectCheckboxes(
-       new \PapayaUiStringTranslated('Named views'),
+       new \PapayaUiStringTranslated('Hide selected views'),
        'result_filter_views',
        new \PapayaIteratorArrayMapper(
          $this->views(), 'title'
-       )
+       ),
+       FALSE
     );
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Link')
