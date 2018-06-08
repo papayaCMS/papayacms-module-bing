@@ -26,6 +26,7 @@ class BoxRelated
   private static $_defaults = [
     'bing_result_limit' => 10,
     'output_result_limit' => 5,
+    'output_result_minimum' => 2,
     'bing_result_cache_time' => 0,
     'search_term_parameter' => 'q',
     'search_term_source_xpath' => 'string(//topic/title)',
@@ -47,18 +48,33 @@ class BoxRelated
    * @param \PapayaXmlElement $parent
    */
   public function appendTo(\PapayaXmlElement $parent) {
-    $searchFor = $this->getSearchFor();
     $reference = $this->papaya()->pageReferences->get(
       $this->papaya()->request->languageId,
       $this->content()->get('search_page_id', '')
     );
+    $searchResult = NULL;
+    $urls = array();
+    $iteration = 0;
+    $minimumUrls = $this->content()->get('output_result_minimum', self::$_defaults['output_result_minimum']);
+    $searchFor = $searchForParameter = $this->getSearchFor();
+    while (NULL !== $searchFor) {
+      $searchForParameter = $searchFor;
+      $searchResult = $this->searchApi()->fetch($searchFor);
+      if ($searchResult instanceof Api\Search\Result) {
+        $urls = iterator_to_array($this->filterUrls($searchResult));
+        if (\count($urls) < $minimumUrls) {
+          $searchFor = $this->getSearchFor(++$iteration);
+          continue;
+        }
+      }
+      break;
+    }
     $reference->getParameters()->set(
       $this->content()->get(
         'search_term_parameter', self::$_defaults['search_term_parameter']
       ),
-      $searchFor
+      $searchForParameter
     );
-    $searchResult = $this->searchApi()->fetch($searchFor);
     $searchNode = $parent->appendElement(
       'search',
       array('href' => (string)$reference)
@@ -67,7 +83,7 @@ class BoxRelated
       $searchNode->setAttribute('term', $searchResult->getQuery());
       $searchNode->setAttribute('cached', $searchResult->isFromCache() ? 'true' : 'false');
       $urlsNode = $searchNode->appendElement('urls');
-      foreach ($this->filterUrls($searchResult) as $url) {
+      foreach ($urls as $url) {
         $urlNode = $urlsNode->appendElement('url');
         $urlNode->setAttribute('href', $url['url']);
         $urlNode->setAttribute('fixed-position', $url['fixed_position'] ? 'true' : 'false');
@@ -131,14 +147,15 @@ class BoxRelated
     return $searchResult;
   }
 
-  private function getSearchFor() {
-    $searchFor = '';
+  private function getSearchFor($iteration = 0) {
     $mode = $this->content()->get('search_term_source_mode');
     switch ($mode) {
     case self::MODE_PAGE_XPATH :
-      $searchFor = $this->getSearchForFromPageDocument(
-        $this->papayaBootstrap()->getPageDocument(),
-        $this->content()->get('search_term_source_xpath', self::$_defaults['search_term_source_xpath'])
+      $keywords = array(
+        $this->getSearchForFromPageDocument(
+          $this->papayaBootstrap()->getPageDocument(),
+          $this->content()->get('search_term_source_xpath', self::$_defaults['search_term_source_xpath'])
+         )
       );
       break;
     case self::MODE_PAGE_METADATA :
@@ -148,33 +165,42 @@ class BoxRelated
       if ($mode === self::MODE_PAGE_METADATA) {
         array_unshift($keywords, $metaData['meta_title']);
       }
-      $keywords = array_unique(
-        array_filter(
-          $keywords,
-          function($keyword) {
-            return '' !== trim($keyword);
-          }
-        )
-      );
-      if (\count($keywords) > 0) {
-        $searchFor = implode(
-          ' ',
-          array_map(
-            function ($keyword) {
-              return FALSE !== strpos($keyword, ' ') ? '"'.$keyword.'"' : $keyword;
-            },
-            $keywords
-          )
-        );
-      }
       break;
     case self::MODE_PAGE_TITLE :
     default:
-      $searchFor = $this->getSearchForFromPageDocument(
-        $this->papayaBootstrap()->getPageDocument(),
-        'string(//topic/@title)'
+      $keywords = array(
+        $searchFor = $this->getSearchForFromPageDocument(
+          $this->papayaBootstrap()->getPageDocument(),
+          'string(//topic/@title)'
+        )
       );
       break;
+    }
+    $keywords = array_unique(
+      array_filter(
+        $keywords,
+        function($keyword) {
+          return '' !== trim($keyword);
+        }
+      )
+    );
+    if ($iteration > 0) {
+      $limit = floor(\count($keywords) / (2 ** $iteration));
+      if ($limit < 1) {
+        return NULL;
+      }
+      $keywords = array_slice($keywords, 0, $limit);
+    }
+    if (\count($keywords) > 0) {
+      $searchFor = implode(
+        ' ',
+        array_map(
+          function ($keyword) {
+            return FALSE !== strpos($keyword, ' ') ? '"'.$keyword.'"' : $keyword;
+          },
+          $keywords
+        )
+      );
     }
     return $searchFor;
   }
@@ -235,9 +261,17 @@ class BoxRelated
       2
     );
     $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
-      new \PapayaUiStringTranslated('Items output limit'),
+      new \PapayaUiStringTranslated('Items output maximum'),
       'output_result_limit',
       self::$_defaults['output_result_limit'],
+      TRUE,
+      1,
+      2
+    );
+    $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
+      new \PapayaUiStringTranslated('Items output minimum'),
+      'output_result_minimum',
+      self::$_defaults['output_result_minimum'],
       TRUE,
       1,
       2
@@ -265,11 +299,13 @@ class BoxRelated
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Filter')
     );
-    $group->fields[] = new \PapayaUiDialogFieldInputCheckbox(
+    $group->fields[] = $field = new \PapayaUiDialogFieldInputCheckbox(
       new \PapayaUiStringTranslated('Hide current URL'),
       'result_hide_current_url',
-      self::$_defaults['result_hide_current_url']
+      self::$_defaults['result_hide_current_url'],
+      FALSE
     );
+    $field->setValues(1, 0);
     $group->fields[] = $field = new \PapayaUiDialogFieldSelectCheckboxes(
        new \PapayaUiStringTranslated('Hide selected views'),
        'result_filter_views',
