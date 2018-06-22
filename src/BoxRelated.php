@@ -151,11 +151,9 @@ class BoxRelated
     $mode = $this->content()->get('search_term_source_mode');
     switch ($mode) {
     case self::MODE_PAGE_XPATH :
-      $keywords = array(
-        $this->getSearchForFromPageDocument(
-          $this->papayaBootstrap()->getPageDocument(),
-          $this->content()->get('search_term_source_xpath', self::$_defaults['search_term_source_xpath'])
-         )
+      $keywords = $this->getSearchKeywordsFromPageDocument(
+        $this->papayaBootstrap()->getPageDocument(),
+        $this->content()->get('search_term_source_xpath', self::$_defaults['search_term_source_xpath'])
       );
       break;
     case self::MODE_PAGE_METADATA :
@@ -168,11 +166,9 @@ class BoxRelated
       break;
     case self::MODE_PAGE_TITLE :
     default:
-      $keywords = array(
-        $searchFor = $this->getSearchForFromPageDocument(
-          $this->papayaBootstrap()->getPageDocument(),
-          'string(//topic/@title)'
-        )
+      $keywords = $this->getSearchKeywordsFromPageDocument(
+        $this->papayaBootstrap()->getPageDocument(),
+        'string(//topic/@title)'
       );
       break;
     }
@@ -205,12 +201,26 @@ class BoxRelated
     return $searchFor;
   }
 
-  private function getSearchForFromPageDocument(\DOMDocument $document, $expression) {
+  /**
+   * @param \DOMDocument $document
+   * @param string $expression
+   * @return string[]
+   */
+  private function getSearchKeywordsFromPageDocument(\DOMDocument $document, $expression) {
     $errors = new \PapayaXmlErrors();
     return $errors->encapsulate(
       function() use ($document, $expression) {
+        $keywords = array();
         $xpath = new \PapayaXmlXpath($document);
-        return $xpath->evaluate($expression);
+        $xpathResult = $xpath->evaluate($expression);
+        if ($xpathResult instanceof \DOMNodeList) {
+          foreach ($xpathResult as $node) {
+            $keywords[] = $node->textContent;
+          }
+        } else {
+          $keywords[] = (string)$xpathResult;
+        }
+        return $keywords;
       },
       NULL,
       FALSE
