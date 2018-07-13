@@ -197,8 +197,9 @@ class BoxRelated
           $keywords
         )
       );
+      return $searchFor;
     }
-    return $searchFor;
+    return NULL;
   }
 
   /**
