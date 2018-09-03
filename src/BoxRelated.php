@@ -30,6 +30,7 @@ class BoxRelated
     'bing_result_cache_time' => 0,
     'search_term_parameter' => 'q',
     'search_term_source_xpath' => 'string(//topic/title)',
+    'search_term_options' => Api\Search::QUERY_LOWERCASE,
     'result_hide_current_url' => TRUE
   ];
 
@@ -243,6 +244,9 @@ class BoxRelated
         $this->content()->get('bing_result_limit', self::$_defaults['bing_result_limit']),
         $this->content()->get('bing_result_cache_time', self::$_defaults['bing_result_cache_time'])
       );
+      $this->_searchApi->setSearchStringOptions(
+        $this->content()->get('search_term_options', self::$_defaults['search_term_options'])
+      );
     }
     return $this->_searchApi;
   }
@@ -307,6 +311,15 @@ class BoxRelated
       4000,
       self::$_defaults['search_term_source_xpath']
     );
+    $group->fields[] = $field = new \PapayaUiDialogFieldSelectBitmask(
+      new \PapayaUiStringTranslated('Options'),
+      'search_term_options',
+      [
+        Api\Search::QUERY_LOWERCASE => new \PapayaUiStringTranslated('Lowercase')
+      ],
+      FALSE
+    );
+    $field->setDefaultValue(self::$_defaults['search_term_options']);
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Filter')
     );

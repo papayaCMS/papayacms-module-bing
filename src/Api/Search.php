@@ -4,6 +4,8 @@ namespace Papaya\Module\Bing\Api;
 
 class Search {
 
+  const QUERY_LOWERCASE = 1;
+
   private $_endPoint;
   private $_key;
   private $_identifier;
@@ -11,6 +13,7 @@ class Search {
   private $_cache;
   private $_expires;
   private $_textDecorations;
+  private $_searchStringOptions;
 
   public function __construct($endPoint, $key, $identifier, $limit = 10) {
     $this->_endPoint = $endPoint;
@@ -35,6 +38,10 @@ class Search {
     $this->_textDecorations = FALSE;
   }
 
+  public function setSearchStringOptions($options = 0) {
+    $this->_searchStringOptions = (int)$options;
+  }
+
   /**
    * @param string $searchFor
    * @param int $pageIndex
@@ -45,7 +52,9 @@ class Search {
       return new Search\Message\EmptyQuery();
     }
     if ('' !== trim($this->_identifier)) {
-
+      if (\PapayaUtilBitwise::inBitmask(self::QUERY_LOWERCASE, $this->_searchStringOptions)) {
+        $searchFor = (string)\PapayaUtilStringUtf8::toLowerCase($searchFor);
+      }
       $offset =  $pageIndex * $this->_limit - $this->_limit;
       $url = sprintf(
         '%s?q=%s&customconfig=%s&count=%d&offset=%d&textDecorations=%s',

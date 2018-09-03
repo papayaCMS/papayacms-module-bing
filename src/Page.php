@@ -28,6 +28,7 @@ class Page
   private static $_defaults = [
     'bing_result_limit' => 10,
     'search_term_parameter' => 'q',
+    'search_term_options' => Api\Search::QUERY_LOWERCASE,
     'bing_result_cache_time' => 0,
     'result_append_teasers' => FALSE,
     'result_decorate_text' => TRUE,
@@ -169,6 +170,9 @@ class Page
         $this->content()->get('bing_result_cache_time', self::$_defaults['bing_result_cache_time'])
       );
       $this->_searchApi->enableTextDecorations();
+      $this->_searchApi->setSearchStringOptions(
+        $this->content()->get('search_term_options', self::$_defaults['search_term_options'])
+      );
     }
     return $this->_searchApi;
   }
@@ -189,24 +193,39 @@ class Page
   ) {
     $general = new \PapayaAdministrationPluginEditorDialog($content);
     $dialog = $general->dialog();
-    $dialog->fields[] = new \PapayaUiDialogFieldInput(
-      new \PapayaUiStringTranslated('Search term parameter'),
-      'search_term_parameter',
-      20,
-      self::$_defaults['search_term_parameter']
+    $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
+      new \PapayaUiStringTranslated('Api')
     );
-    $dialog->fields[] = new \PapayaUiDialogFieldInput(
+    $group->fields[] = new \PapayaUiDialogFieldInput(
       new \PapayaUiStringTranslated('Bing configuration id'),
       'bing_configuration_id'
     );
-    $dialog->fields[] = new \PapayaUiDialogFieldInputNumber(
-      new \PapayaUiStringTranslated('Api Cache Time'),
+    $group->fields[] = new \PapayaUiDialogFieldInputNumber(
+      new \PapayaUiStringTranslated('Cache Time'),
       'bing_result_cache_time',
       self::$_defaults['bing_result_cache_time'],
       FALSE,
       NULL,
       10
     );
+    $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
+      new \PapayaUiStringTranslated('Search Parameter')
+    );
+    $group->fields[] = new \PapayaUiDialogFieldInput(
+      new \PapayaUiStringTranslated('Name'),
+      'search_term_parameter',
+      20,
+      self::$_defaults['search_term_parameter']
+    );
+    $group->fields[] = $field = new \PapayaUiDialogFieldSelectBitmask(
+      new \PapayaUiStringTranslated('Options'),
+      'search_term_options',
+      [
+        Api\Search::QUERY_LOWERCASE => new \PapayaUiStringTranslated('Lowercase')
+      ],
+      FALSE
+    );
+    $field->setDefaultValue(self::$_defaults['search_term_options']);
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Result')
     );
