@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "2622e68ed853111c2412bbde9db09cb4",
+    "content-hash": "1d506ee78991df5d4750c594b7b43fa8",
     "packages": [
         {
             "name": "papaya/cms-core",
-            "version": "6.2.9",
+            "version": "6.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/papayaCMS/papayacms-core.git",
-                "reference": "867a0b30dd0adb03b306abf77479855a269db94d"
+                "reference": "e2c11bf17a7c05d3adf3307f40fdb89101037db3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/papayaCMS/papayacms-core/zipball/867a0b30dd0adb03b306abf77479855a269db94d",
-                "reference": "867a0b30dd0adb03b306abf77479855a269db94d",
+                "url": "https://api.github.com/repos/papayaCMS/papayacms-core/zipball/e2c11bf17a7c05d3adf3307f40fdb89101037db3",
+                "reference": "e2c11bf17a7c05d3adf3307f40fdb89101037db3",
                 "shasum": ""
             },
             "require": {
@@ -46,22 +46,22 @@
             ],
             "description": "papaya CMS core framework",
             "homepage": "http://www.papaya-cms.com/",
-            "time": "2018-06-25T09:12:36+00:00"
+            "time": "2018-09-10T11:48:00+00:00"
         }
     ],
     "packages-dev": [
         {
             "name": "papaya/cms-administration",
-            "version": "6.0.2",
+            "version": "6.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/papayaCMS/papayacms-administration.git",
-                "reference": "71d3529ae38ee0142c4415973365993180b580e3"
+                "reference": "7fa353b697dbb6feee2a01edc4e65a6f9b7316d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/papayaCMS/papayacms-administration/zipball/71d3529ae38ee0142c4415973365993180b580e3",
-                "reference": "71d3529ae38ee0142c4415973365993180b580e3",
+                "url": "https://api.github.com/repos/papayaCMS/papayacms-administration/zipball/7fa353b697dbb6feee2a01edc4e65a6f9b7316d9",
+                "reference": "7fa353b697dbb6feee2a01edc4e65a6f9b7316d9",
                 "shasum": ""
             },
             "require": {
@@ -69,7 +69,7 @@
             },
             "type": "papaya-administration-ui",
             "notification-url": "https://packagist.org/downloads/",
-            "time": "2018-04-20T13:11:56+00:00"
+            "time": "2018-07-13T12:18:36+00:00"
         },
         {
             "name": "papaya/composer-plugins",
@@ -109,16 +109,16 @@
         },
         {
             "name": "papaya/module-default",
-            "version": "1.1.0",
+            "version": "1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/papayaCMS/papayacms-module-default.git",
-                "reference": "2807bfa5441f069675e33b6458b6bdc9dfa1f260"
+                "reference": "f2bbc434bcedcdc7745ad6a6c93f525a73d22785"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/papayaCMS/papayacms-module-default/zipball/2807bfa5441f069675e33b6458b6bdc9dfa1f260",
-                "reference": "2807bfa5441f069675e33b6458b6bdc9dfa1f260",
+                "url": "https://api.github.com/repos/papayaCMS/papayacms-module-default/zipball/f2bbc434bcedcdc7745ad6a6c93f525a73d22785",
+                "reference": "f2bbc434bcedcdc7745ad6a6c93f525a73d22785",
                 "shasum": ""
             },
             "require": {
@@ -138,20 +138,20 @@
                 "GPL-2.0"
             ],
             "homepage": "http://www.papaya-cms.com/",
-            "time": "2018-03-19T14:11:03+00:00"
+            "time": "2018-07-18T14:46:52+00:00"
         },
         {
             "name": "papaya/template-responsive",
-            "version": "1.1.0",
+            "version": "1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/papayaCMS/papayacms-template-responsive.git",
-                "reference": "6cd7ab0c5e897d6ce5e31581e15aacf6e307f6b4"
+                "reference": "374627777ac1418e5370a01fe334a355f7903d0c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/papayaCMS/papayacms-template-responsive/zipball/6cd7ab0c5e897d6ce5e31581e15aacf6e307f6b4",
-                "reference": "6cd7ab0c5e897d6ce5e31581e15aacf6e307f6b4",
+                "url": "https://api.github.com/repos/papayaCMS/papayacms-template-responsive/zipball/374627777ac1418e5370a01fe334a355f7903d0c",
+                "reference": "374627777ac1418e5370a01fe334a355f7903d0c",
                 "shasum": ""
             },
             "require": {
@@ -159,20 +159,20 @@
             },
             "type": "papaya-template",
             "notification-url": "https://packagist.org/downloads/",
-            "time": "2015-10-13T14:10:04+00:00"
+            "time": "2018-07-04T09:45:49+00:00"
         },
         {
             "name": "papaya/test-framework",
-            "version": "6.0.0",
+            "version": "6.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/papayaCMS/papayacms-test-framework.git",
-                "reference": "aaac1132d2ed3d5b23991bd43d25149646287557"
+                "reference": "1ae254fe73a3863a490065c5ce4769e9c47833b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/papayaCMS/papayacms-test-framework/zipball/aaac1132d2ed3d5b23991bd43d25149646287557",
-                "reference": "aaac1132d2ed3d5b23991bd43d25149646287557",
+                "url": "https://api.github.com/repos/papayaCMS/papayacms-test-framework/zipball/1ae254fe73a3863a490065c5ce4769e9c47833b9",
+                "reference": "1ae254fe73a3863a490065c5ce4769e9c47833b9",
                 "shasum": ""
             },
             "type": "library",
@@ -187,7 +187,7 @@
             ],
             "description": "papaya CMS unittest framework",
             "homepage": "http://www.papaya-cms.com/",
-            "time": "2017-04-10T13:33:04+00:00"
+            "time": "2018-08-01T13:24:49+00:00"
         },
         {
             "name": "papaya/theme-dynamic",
@@ -218,7 +218,8 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=5.6"
+        "php": ">=5.6",
+        "ext-json": "*"
     },
     "platform-dev": []
 }

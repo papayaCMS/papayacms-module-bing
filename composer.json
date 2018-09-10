@@ -7,7 +7,7 @@
   "require": {
     "php": ">=5.6",
     "ext-json": "*",
-    "papaya/cms-core": "^6.2"
+    "papaya/cms-core": "^6.5"
   },
   "require-dev": {
     "papaya/test-framework": "6.*",
