@@ -89,6 +89,10 @@ class Page
       $urlsNode->setAttribute('count', count($searchResult));
 
       $addTeasers = $this->content()->get('result_append_teasers', self::$_defaults['result_append_teasers']);
+      $teasers = [];
+      if ($addTeasers) {
+        $teasers = $this->createTeasers(new \PapayaIteratorArrayMapper($searchResult, 'url'));
+      }
       foreach ($searchResult as $url) {
         $urlNode = $urlsNode->appendElement('url');
         $urlNode->setAttribute('href', $url['url']);
@@ -96,11 +100,13 @@ class Page
         $urlNode->setAttribute('fixed-position', $url['fixed_position'] ? 'true' : 'false');
         $urlNode->appendElement('title')->append(new Api\Search\DecoratedText($url['title']));
         $urlNode->appendElement('snippet')->append(new Api\Search\DecoratedText($url['snippet']));
-        if ($addTeasers && ($teaser = $this->createTeaser($url))) {
+        if ($addTeasers && isset($teasers[$url['url']])) {
+          $teaser = $teasers[$url['url']];
           /** @var \PapayaUiContentPage $page */
           $page = $teaser['page'];
+          $view = $teaser['view'];
           $page->appendQuoteTo(
-            $urlNode, array('query_string' => $teaser['query_string'])
+            $urlNode, array('query_string' => $teaser['query_string']), $view
           );
         }
       }
@@ -121,18 +127,38 @@ class Page
     $parent->append($filters);
   }
 
-  private function createTeaser($url) {
-    $request = new \PapayaRequest();
-    $request->load(new \PapayaUrl($url['url']));
-    if ($request->pageId > 0 && $request->languageId > 0) {
-      return array(
-        'page' => new \PapayaUiContentPage(
-          $request->pageId, $request->languageId, TRUE
-        ),
-        'query_string' => $request->url->getQuery(),
-      );
+  private function createTeasers($urls) {
+    $result = [];
+    $viewIds = [];
+    foreach ($urls as $url) {
+      $request = new \PapayaRequest();
+      $request->load(new \PapayaUrl($url));
+      if ($request->pageId > 0 && $request->languageId > 0) {
+        $result[$url] = array(
+          'page' => $page = new \PapayaUiContentPage(
+            $request->pageId, $request->languageId, TRUE
+          ),
+          'page_id' => $request->pageId,
+          'language_id' => $request->languageId,
+          'view_id' => $viewId = $page->translation()->viewId,
+          'view' => NULL,
+          'query_string' => $request->url->getQuery(),
+        );
+        $viewIds[] = $viewId;
+      }
     }
-    return NULL;
+    $views = new \PapayaContentViewConfigurations();
+    $views->papaya($this->papaya());
+    $viewModeId = $this->papaya()->request->mode()->id;
+    $filter = ['id' => array_unique($viewIds), 'mode_id' => $viewModeId, 'output'];
+    if ($views->load($filter)) {
+      foreach ($result as &$item) {
+        if ($view = $views->offsetGet([$item['view_id'], $viewModeId, 'output'])) {
+          $item['view'] = $view;
+        }
+      }
+    }
+    return $result;
   }
 
   private function appendMessageTo(\PapayaXmlElement $parent, Api\Search\Message $message) {
