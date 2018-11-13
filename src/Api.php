@@ -13,7 +13,8 @@ class Api
 
   private static $_defaults = array(
     'BING_API_ENDPOINT' => 'https://api.cognitive.microsoft.com/bingcustomsearch/v7.0/search',
-    'CACHE_SERVICE' => 'file'
+    'CACHE_SERVICE' => 'file',
+    'DISABLE_SSL_PEER_VERIFICATION' => FALSE
   );
 
   /**
@@ -38,6 +39,12 @@ class Api
       1024,
       self::$_defaults['BING_API_ENDPOINT'],
       new \PapayaFilterUrl()
+    );
+    $group->fields[] = new \PapayaUiDialogFieldInputCheckbox(
+      new \PapayaUiStringTranslated('Disable SSL Peer Verification'),
+      'DISABLE_SSL_PEER_VERIFICATION',
+      self::$_defaults['DISABLE_SSL_PEER_VERIFICATION'],
+      FALSE
     );
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Cache')
@@ -129,6 +136,9 @@ class Api
       $configurationIdentifier,
       $resultLimit
     );
+    if ($this->options()->get('DISABLE_SSL_PEER_VERIFICATION', self::$_defaults['DISABLE_SSL_PEER_VERIFICATION'])) {
+      $searchApi->disableSSLPeerVerification();
+    }
     $searchApi->cache($this->createCacheService(), $resultCacheTime);
     return $searchApi;
   }

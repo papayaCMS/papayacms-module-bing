@@ -14,6 +14,7 @@ class Search {
   private $_expires;
   private $_textDecorations;
   private $_searchStringOptions;
+  private $_disableSSLPeerVerification;
 
   public function __construct($endPoint, $key, $identifier, $limit = 10) {
     $this->_endPoint = $endPoint;
@@ -36,6 +37,14 @@ class Search {
 
   public function disableTextDecorations() {
     $this->_textDecorations = FALSE;
+  }
+
+  public function enableSSLPeerVerification() {
+    $this->_disableSSLPeerVerification = FALSE;
+  }
+
+  public function disableSSLPeerVerification() {
+    $this->_disableSSLPeerVerification = TRUE;
   }
 
   public function setSearchStringOptions($options = 0) {
@@ -99,6 +108,12 @@ class Search {
           'ignore_errors' => '1'
         )
       );
+      if ($this->_disableSSLPeerVerification) {
+        $options['ssl'] = [
+          'verify_peer' => FALSE,
+          'verify_peer_name' => FALSE,
+        ];
+      }
       $context = stream_context_create($options);
       try {
         $response = file_get_contents($url, FALSE, $context);
@@ -171,7 +186,6 @@ class Search {
     }
     return new Search\Message\TechnicalError(
       'API request failed'.(isset($http_response_header[0]) ? ': '.$http_response_header[0] : '.')
-      .\implode(', ', $http_response_header)
     );
   }
 
