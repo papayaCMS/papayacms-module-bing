@@ -51,77 +51,128 @@ class Search {
     if ('' === trim($searchFor)) {
       return new Search\Message\EmptyQuery();
     }
-    if ('' !== trim($this->_identifier)) {
-      if (\PapayaUtilBitwise::inBitmask(self::QUERY_LOWERCASE, $this->_searchStringOptions)) {
-        $searchFor = (string)\PapayaUtilStringUtf8::toLowerCase($searchFor);
-      }
-      $offset =  $pageIndex * $this->_limit - $this->_limit;
-      $url = sprintf(
-        '%s?q=%s&customconfig=%s&count=%d&offset=%d&textDecorations=%s',
-        $this->_endPoint,
-        urlencode($searchFor),
-        urlencode($this->_identifier),
-        $this->_limit,
-        $offset,
-        $this->_textDecorations ? 'true' : 'false'
-      );
-      $cacheParameters = array(
-        $this->_identifier,
-        $searchFor,
-        $this->_limit,
-        $offset,
-        $this->_textDecorations ? 'true' : 'false'
-      );
+    if ('' === trim($this->_endPoint)) {
+      return new Search\Message\TechnicalError('No API endpoint defined.');
+    }
+    if ('' === trim($this->_key)) {
+      return new Search\Message\TechnicalError('No API key defined.');
+    }
+    if ('' === trim($this->_identifier)) {
+      return new Search\Message\TechnicalError('No custom search identifier defined.');
+    }
+    if (\PapayaUtilBitwise::inBitmask(self::QUERY_LOWERCASE, $this->_searchStringOptions)) {
+      $searchFor = (string)\PapayaUtilStringUtf8::toLowerCase($searchFor);
+    }
+    $offset =  $pageIndex * $this->_limit - $this->_limit;
+    $url = sprintf(
+      '%s?q=%s&customconfig=%s&count=%d&offset=%d&textDecorations=%s',
+      $this->_endPoint,
+      urlencode($searchFor),
+      urlencode($this->_identifier),
+      $this->_limit,
+      $offset,
+      $this->_textDecorations ? 'true' : 'false'
+    );
+    $cacheParameters = array(
+      $this->_identifier,
+      $searchFor,
+      $this->_limit,
+      $offset,
+      $this->_textDecorations ? 'true' : 'false'
+    );
 
-      $response = NULL;
-      $cache = NULL;
-      $hasCache = $this->_expires > 0 && ($cache = $this->cache()) && $cache->verify(TRUE);
-      $isCached = FALSE;
-      if (
-        $hasCache &&
-        ($response = $cache->read('BING_CUSTOM_SEARCH', $this->_identifier, $cacheParameters, $this->_expires))
-      ) {
-        $isCached = TRUE;
-      } else {
-        $options = array(
-          'http' => array(
-            'method' => 'GET',
-            'header' => 'Ocp-Apim-Subscription-Key: '.$this->_key."\r\n",
-            'timeout ' => 3
-          )
-        );
-        $context = stream_context_create($options);
-        $response = @file_get_contents($url, false, $context);
-      }
-      if ($response) {
-        $result = json_decode($response, JSON_OBJECT_AS_ARRAY);
-        $type = isset($result['_type']) ? $result['_type'] : '';
-        switch ($type) {
-        case 'SearchResponse':
-          if ($hasCache) {
-            $cache->write(
-              'BING_CUSTOM_SEARCH', $this->_identifier, $cacheParameters, $response, $this->_expires
-            );
-          }
-          return new Search\Result($result, $isCached);
-        }
-      } elseif (
-        $hasCache &&
-        (
-          $response = $cache->read(
-            'BING_CUSTOM_SEARCH', $this->_identifier, $cacheParameters, $this->_expires + 100
-          )
+    $response = NULL;
+    $cache = NULL;
+    $hasCache = $this->_expires > 0 && ($cache = $this->cache()) && $cache->verify(TRUE);
+    $isCached = FALSE;
+    if (
+      $hasCache &&
+      ($response = $cache->read('BING_CUSTOM_SEARCH', $this->_identifier, $cacheParameters, $this->_expires))
+    ) {
+      $isCached = TRUE;
+    } else {
+      $options = array(
+        'http' => array(
+          'method' => 'GET',
+          'header' => 'Ocp-Apim-Subscription-Key: '.$this->_key."\r\n",
+          'timeout ' => 3,
+          'ignore_errors' => '1'
         )
-      ) {
-        $result = json_decode($response, JSON_OBJECT_AS_ARRAY);
-        $type = isset($result['_type']) ? $result['_type'] : '';
-        switch ($type) {
-        case 'SearchResponse':
-          return new Search\Result($result, TRUE);
-        }
+      );
+      $context = stream_context_create($options);
+      try {
+        $response = file_get_contents($url, FALSE, $context);
+      } catch (\Exception $e) {
+        return new Search\Message\TechnicalError('Request failed:'.$e->getMessage());
+      } catch (\Throwable $e) {
+        return new Search\Message\TechnicalError('Request failed:'.$e->getMessage());
       }
     }
-    return new Search\Message\TechnicalError();
+    if (FALSE !== $response) {
+      $result = json_decode($response, JSON_OBJECT_AS_ARRAY);
+      $type = isset($result['_type']) ? $result['_type'] : '';
+      switch ($type) {
+      case 'ErrorResponse':
+        $errors = \implode(
+          ', ',
+          array_map(
+            function($error) {
+              if (!is_array($error)) {
+                return NULL;
+              }
+              return \sprintf(
+                '%s - %s (%s)',
+                \PapayaUtilArray::get($error, 'code', ''),
+                \PapayaUtilArray::get($error, 'message', ''),
+                \PapayaUtilArray::get($error, 'parameter', '')
+              );
+            },
+            isset($result['errors']) && \is_array($result['errors']) ? $result['errors'] : []
+          )
+        );
+        return new Search\Message\TechnicalError('API responded with error(s): '.$errors);
+      case 'SearchResponse':
+        if ($hasCache) {
+          $cache->write(
+            'BING_CUSTOM_SEARCH', $this->_identifier, $cacheParameters, $response, $this->_expires
+          );
+        }
+        return new Search\Result($result, $isCached);
+      default:
+        if (isset($result['statusCode'])) {
+          return new Search\Message\TechnicalError(
+            'API request failed: '.
+            \PapayaUtilArray::get($result, 'statusCode', 0).' - '.
+            \PapayaUtilArray::get($result, 'message', 0)
+          );
+        }
+        if (isset($result['error'])) {
+          return new Search\Message\TechnicalError(
+            'API request failed: '.
+            \PapayaUtilArray::get($result['error'], 'code', 0).' - '.
+            \PapayaUtilArray::get($result['error'], 'message', 0)
+          );
+        }
+      }
+    } elseif (
+      $hasCache &&
+      (
+        $response = $cache->read(
+          'BING_CUSTOM_SEARCH', $this->_identifier, $cacheParameters, $this->_expires + 100
+        )
+      )
+    ) {
+      $result = json_decode($response, JSON_OBJECT_AS_ARRAY);
+      $type = isset($result['_type']) ? $result['_type'] : '';
+      switch ($type) {
+      case 'SearchResponse':
+        return new Search\Result($result, TRUE);
+      }
+    }
+    return new Search\Message\TechnicalError(
+      'API request failed'.(isset($http_response_header[0]) ? ': '.$http_response_header[0] : '.')
+      .\implode(', ', $http_response_header)
+    );
   }
 
 }
