@@ -7,11 +7,11 @@
   "require": {
     "php": ">=5.6",
     "ext-json": "*",
-    "papaya/cms-core": "^6.5"
+    "papaya/cms-core": "^6.5|^7.0"
   },
   "require-dev": {
-    "papaya/test-framework": "6.*",
-    "papaya/cms-administration": "6.*",
+    "papaya/test-framework": "6.*|7.*",
+    "papaya/cms-administration": "6.*|7.*",
     "papaya/theme-dynamic": "1.*",
 
     "papaya/module-default": "1.*"
