@@ -72,14 +72,24 @@ class Search {
     if (\PapayaUtilBitwise::inBitmask(self::QUERY_LOWERCASE, $this->_searchStringOptions)) {
       $searchFor = (string)\PapayaUtilStringUtf8::toLowerCase($searchFor);
     }
-    $offset =  $pageIndex * $this->_limit - $this->_limit;
+    $offset = $pageIndex * $this->_limit - $this->_limit;
+    if ($this->_limit < 50) {
+      // calculate the maximum results splitable into pages that fit into one api request
+      $fetchLimit = floor(50 / $this->_limit) * $this->_limit;
+    } else {
+      $fetchLimit = 50;
+    }
+    // round offset
+    $fetchOffset = floor($offset / $fetchLimit) * $fetchLimit;
+    // offset of resuls inside the api result
+    $resultOffset = $offset - $fetchOffset;
     $url = sprintf(
       '%s?q=%s&customconfig=%s&count=%d&offset=%d&textDecorations=%s',
       $this->_endPoint,
       urlencode($searchFor),
       urlencode($this->_identifier),
-      $this->_limit,
-      $offset,
+      $fetchLimit,
+      $fetchOffset,
       $this->_textDecorations ? 'true' : 'false'
     );
     $cacheParameters = array(
@@ -152,7 +162,7 @@ class Search {
             'BING_CUSTOM_SEARCH', $this->_identifier, $cacheParameters, $response, $this->_expires
           );
         }
-        return new Search\Result($result, $isCached);
+        return new Search\Result($result, $isCached, $resultOffset, $this->_limit);
       default:
         if (isset($result['statusCode'])) {
           return new Search\Message\TechnicalError(

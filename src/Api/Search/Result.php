@@ -8,10 +8,14 @@ class Result implements \IteratorAggregate, \Countable {
   private $_pages;
   private $_fromCache;
   private $_messages;
+  private $_offset;
+  private $_limit;
 
-  public function __construct($response, $fromCache = FALSE) {
+  public function __construct($response, $fromCache = FALSE, $offset = 0, $limit = 50) {
     $this->_response = $response;
     $this->_fromCache = (bool)$fromCache;
+    $this->_offset = $offset;
+    $this->_limit = $limit;
   }
 
   public function isFromCache() {
@@ -59,7 +63,8 @@ class Result implements \IteratorAggregate, \Countable {
     if (NULL === $this->_pages) {
       $this->_pages = [];
       if (isset($this->_response['webPages']['value']) && is_array($this->_response['webPages']['value'])) {
-        foreach ($this->_response['webPages']['value'] as $page) {
+        $webPages = array_slice($this->_response['webPages']['value'], $this->_offset, $this->_limit);
+        foreach ($webPages as $page) {
           $this->_pages[] = [
             'url' => $page['url'],
             'title' => $page['name'],
