@@ -28,6 +28,7 @@ class Page
   private static $_defaults = [
     'bing_result_limit' => 10,
     'search_term_parameter' => 'q',
+    'search_term_parameter_fallbacks' => '',
     'search_term_options' => Api\Search::QUERY_LOWERCASE,
     'bing_result_cache_time' => 0,
     'result_append_teasers' => FALSE,
@@ -73,7 +74,19 @@ class Page
     );
 
     $searchParameter = $this->content()->get('search_term_parameter', self::$_defaults['search_term_parameter']);
-    $searchFor = $this->parameters()->get($searchParameter, '');
+    $searchParameters = preg_split(
+      '(\s+)', trim($this->content()->get('search_term_parameter_fallbacks', ''))
+    );
+    array_unshift($searchParameters, $searchParameter);
+    foreach ($searchParameters as $parameterName) {
+      if (trim($parameterName) === '') {
+        continue;
+      }
+      $searchFor = $this->parameters()->get($parameterName, '');
+      if (trim($searchFor) !== '') {
+        break;
+      }
+    }
     $pageIndex = max(1, $this->parameters()->get('q_page', 1));
 
     $searchResult = $this->searchApi()->fetch($searchFor, $pageIndex);
@@ -252,6 +265,12 @@ class Page
       FALSE
     );
     $field->setDefaultValue(self::$_defaults['search_term_options']);
+    $group->fields[] = $field = new \PapayaUiDialogFieldTextarea(
+      new \PapayaUiStringTranslated('Fallback Parameters'),
+      'search_term_parameter_fallbacks',
+      4,
+      self::$_defaults['search_term_parameter_fallbacks']
+    );
     $dialog->fields[] = $group = new \PapayaUiDialogFieldGroup(
       new \PapayaUiStringTranslated('Result')
     );
